@@ -12,7 +12,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
     <!-- Bibliotecas para Excel e PDF -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -746,7 +746,6 @@
         // CARREGAR CONSULTORES
         function carregarConsultores() {
             document.getElementById('loadingConsultores').style.display = 'block';
-
             database.ref('consultores').once('value')
                 .then((snapshot) => {
                     const consultores = snapshot.val();
@@ -754,12 +753,20 @@
 
                     if (consultores) {
                         Object.keys(consultores).forEach((key) => {
-                            const consultor = consultores[key];
-                            todosConsultores.push({
-                                id: key,
-                                nome: consultor.consultor || key.replace(/_/g, ' '),
-                                ...consultor
-                            });
+                            const c = consultores[key];
+                            // Usar 'perfil' se existir, senão usar o próprio nó (compatibilidade)
+                            const perfil = c.perfil || c;
+
+                            // Ignorar se não for um consultor válido (ex: metadados perdidos)
+                            if (perfil.consultor || perfil.nome) {
+                                todosConsultores.push({
+                                    id: key,
+                                    nome: perfil.consultor || perfil.nome || key.replace(/_/g, ' '),
+                                    ...perfil,
+                                    // Manter checklists aqui para contagem/busca rápida se necessário
+                                    checklists: c.checklists || null
+                                });
+                            }
                         });
                     }
 
@@ -781,19 +788,23 @@
 
                     if (consultores) {
                         Object.values(consultores).forEach((c) => {
-                            if (c.regional) regionais.add(c.regional);
+                            const perfil = c.perfil || c;
+                            if (perfil.regional) regionais.add(perfil.regional);
                         });
                     }
 
                     const select = document.getElementById('filtroRegional');
-                    regionais.forEach((r) => {
-                        if (r) {
-                            const option = document.createElement('option');
-                            option.value = r;
-                            option.textContent = r;
-                            select.appendChild(option);
-                        }
-                    });
+                    if (select) {
+                        select.innerHTML = '<option value="">Todas as Regionais</option>';
+                        regionais.forEach((r) => {
+                            if (r) {
+                                const option = document.createElement('option');
+                                option.value = r;
+                                option.textContent = r;
+                                select.appendChild(option);
+                            }
+                        });
+                    }
                 });
         }
 
@@ -844,9 +855,9 @@
             container.innerHTML = '';
 
             consultoresFiltrados.forEach((c, index) => {
-                const status = c.metadata?.online ? 'online' : 'offline';
-                const ultimaVez = c.metadata?.ultimaAtualizacao ? new Date(c.metadata.ultimaAtualizacao).toLocaleDateString('pt-BR') : 'Sem registro';
-                const visitasCount = c.visitas ? c.visitas.length : 0;
+                const status = c.online ? 'online' : 'offline';
+                const ultimaVez = c.ultimaAtualizacao ? new Date(c.ultimaAtualizacao).toLocaleDateString('pt-BR') : 'Sem registro';
+                const countRegistros = c.checklists ? Object.keys(c.checklists).length : 0;
 
                 const card = document.createElement('div');
                 card.className = 'card-consultor group';
@@ -870,8 +881,8 @@
                             <span>${c.cidade || '---'} / ${c.uf || '--'}</span>
                         </div>
                         <div class="flex items-center text-sm text-slate-500 font-medium">
-                            <div class="w-8 flex justify-center"><i class="fas fa-calendar-check text-slate-400"></i></div>
-                            <span>${visitasCount} Visitas realizadas</span>
+                            <div class="w-8 flex justify-center"><i class="fas fa-history text-slate-400"></i></div>
+                            <span>${countRegistros} Checklists realizadas</span>
                         </div>
                         <div class="flex items-center text-sm text-slate-500 font-medium">
                             <div class="w-8 flex justify-center"><i class="fas fa-clock text-slate-400"></i></div>
@@ -908,31 +919,123 @@
             return count > 0 ? (soma / count).toFixed(1) : '-';
         }
 
-        // ABRIR CHECKLIST COMPLETO
+        // ABRIR CHECKLIST COMPLETO (COM SUPORTE A HISTÓRICO)
         function abrirChecklist(consultorId) {
             consultorSelecionado = consultorId;
 
             database.ref('consultores/' + consultorId).once('value')
                 .then((snapshot) => {
-                    dadosConsultorSelecionado = snapshot.val();
-                    if (!dadosConsultorSelecionado) return;
+                    const fullData = snapshot.val();
+                    if (!fullData) return;
 
-                    document.getElementById('modalTitulo').innerHTML = `<i class="fas fa-user-circle mr-2 text-[#3b82f6]"></i> ${dadosConsultorSelecionado.consultor || consultorId}`;
+                    // Estrutura nova vs antiga
+                    const perfil = fullData.perfil || fullData;
+                    const checklists = fullData.checklists || null;
+
+                    document.getElementById('modalTitulo').innerHTML = `<i class="fas fa-user-circle mr-2 text-[#3b82f6]"></i> ${perfil.consultor || consultorId}`;
                     document.getElementById('modalSubtitulo').innerHTML = `
-                        <span class="opacity-70">Unidade:</span> ${dadosConsultorSelecionado.cidade || '---'} 
+                        <span class="opacity-70">Unidade:</span> ${perfil.cidade || '---'} 
                         <span class="mx-2 opacity-30">|</span> 
-                        <span class="opacity-70">Regional:</span> ${dadosConsultorSelecionado.regional || '---'}
+                        <span class="opacity-70">Regional:</span> ${perfil.regional || '---'}
                     `;
 
                     document.getElementById('modalChecklist').classList.add('active');
 
-                    // Renderizar todas as abas
-                    renderizarChecklistCompleto(dadosConsultorSelecionado);
-                    gerarCalendario(dadosConsultorSelecionado);
-                    renderizarVerso(dadosConsultorSelecionado);
+                    if (checklists) {
+                        renderizarListaHistorico(consultorId, checklists);
+                    } else {
+                        // Caso seja um registro antigo ou sem histórico
+                        dadosConsultorSelecionado = fullData;
+                        renderizarChecklistCompleto(fullData);
+                        gerarCalendario(fullData);
+                        renderizarVerso(fullData);
+                    }
                 })
                 .catch((error) => {
                     alert('Erro ao carregar dados: ' + error.message);
+                });
+        }
+
+        // RENDERIZAR LISTA DE CHECKLISTS (HISTÓRICO)
+        function renderizarListaHistorico(consultorId, checklists) {
+            const content = document.getElementById('checklistContent');
+            const historyKeys = Object.keys(checklists).sort((a, b) => {
+                const dataA = checklists[a].dataSalvamento || '';
+                const dataB = checklists[b].dataSalvamento || '';
+                return dataB.localeCompare(dataA);
+            });
+
+            let html = `
+                <div class="p-8">
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <h2 class="text-2xl font-black text-slate-800 tracking-tight">Histórico de Visitas</h2>
+                            <p class="text-slate-500 font-medium">Selecione um checklist abaixo para visualizar os detalhes.</p>
+                        </div>
+                        <div class="bg-blue-50 text-blue-600 px-4 py-2 rounded-full text-sm font-bold">
+                            ${historyKeys.length} registros encontrados
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            `;
+
+            historyKeys.forEach(key => {
+                const c = checklists[key];
+                const dataObj = c.dataSalvamento ? new Date(c.dataSalvamento) : null;
+                const dataFormatada = dataObj ? dataObj.toLocaleDateString('pt-BR') : 'Sem data';
+                const horaFormatada = dataObj ? dataObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
+                const loja = c.loja?.revenda || 'Venda não identificada';
+                const filial = c.loja?.filial || '';
+
+                html += `
+                    <div onclick="abrirChecklistHistorico('${consultorId}', '${key}')" class="bg-white border-2 border-slate-100 rounded-2xl p-6 hover:border-blue-500 hover:shadow-2xl hover:-translate-y-1 transition-all cursor-pointer group relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-full -mr-12 -mt-12 group-hover:bg-blue-100 transition-all"></div>
+                        
+                        <div class="relative">
+                            <div class="flex justify-between items-start mb-6">
+                                <div class="w-12 h-12 bg-white shadow-sm border border-slate-100 text-blue-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-all">
+                                    <i class="fas fa-file-alt text-xl"></i>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xs font-black text-slate-400 uppercase tracking-widest">${dataFormatada}</div>
+                                    <div class="text-[10px] font-bold text-blue-400">${horaFormatada}</div>
+                                </div>
+                            </div>
+                            
+                            <h4 class="font-extrabold text-[#1e3c72] text-lg mb-1 leading-tight group-hover:text-blue-600 transition-colors">${loja}</h4>
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-tighter mb-4">${filial || 'FILIAL NÃO INFORMADA'}</p>
+                            
+                            <div class="flex items-center text-xs font-bold text-blue-600">
+                                Ver Detalhes <i class="fas fa-chevron-right ml-2 group-hover:translate-x-1 transition-all"></i>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `</div></div>`;
+            content.innerHTML = html;
+
+            // Limpa as outras abas enquanto escolhe
+            document.getElementById('calendarioContent').innerHTML = '<div class="flex flex-col items-center justify-center h-64 text-slate-300"><i class="fas fa-mouse-pointer text-4xl mb-4"></i><p>Selecione um checklist no histórico</p></div>';
+            document.getElementById('versoContent').innerHTML = '';
+        }
+
+        // ABRIR UM CHECKLIST ESPECÍFICO DO HISTÓRICO
+        function abrirChecklistHistorico(consultorId, checklistId) {
+            database.ref(`consultores/${consultorId}/checklists/${checklistId}`).once('value')
+                .then(snapshot => {
+                    const data = snapshot.val();
+                    if (data) {
+                        dadosConsultorSelecionado = data;
+                        renderizarChecklistCompleto(data);
+                        gerarCalendario(data);
+                        renderizarVerso(data);
+
+                        // Scroll suave para o topo do conteúdo
+                        document.querySelector('.modal-body').scrollTo({ top: 0, behavior: 'smooth' });
+                    }
                 });
         }
 
@@ -1410,9 +1513,63 @@
 
             const ws = XLSX.utils.aoa_to_sheet(dados);
             ws['!merges'] = merges;
+
+            // APLICAR ESTILOS (Bordas, Cores, Fontes)
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            for (let R = range.s.r; R <= range.e.r; R++) {
+                for (let C_idx = range.s.c; C_idx <= range.e.c; C_idx++) {
+                    const cellRef = XLSX.utils.encode_cell({ r: R, c: C_idx });
+                    if (!ws[cellRef]) ws[cellRef] = { v: '' }; // Garante bordas em células vazias
+
+                    ws[cellRef].s = {
+                        border: {
+                            top: { style: 'thin', color: { rgb: '000000' } },
+                            bottom: { style: 'thin', color: { rgb: '000000' } },
+                            left: { style: 'thin', color: { rgb: '000000' } },
+                            right: { style: 'thin', color: { rgb: '000000' } }
+                        },
+                        font: { name: 'Arial', sz: 10 },
+                        alignment: { vertical: 'center', wrapText: true, horizontal: 'left' }
+                    };
+
+                    // Estilo Título Principal (CHECK LIST 2026)
+                    if (R === 0) {
+                        ws[cellRef].s.fill = { fgColor: { rgb: '1e3c72' } };
+                        ws[cellRef].s.font = { color: { rgb: 'FFFFFF' }, bold: true, sz: 14 };
+                        ws[cellRef].s.alignment.horizontal = 'center';
+                    }
+
+                    // Estilo Seções (Fundo azul claro)
+                    const rowVal = dados[R] ? dados[R][0] : '';
+                    const isSection = typeof rowVal === 'string' && (
+                        rowVal.includes('INFORMAÇÕES') ||
+                        rowVal.includes('CERTIFICAÇÃO') ||
+                        rowVal.includes('IDC') ||
+                        rowVal.includes('DESTAQUE') ||
+                        rowVal.includes('LANÇAMENTOS') ||
+                        rowVal.includes('VISITAS')
+                    ) && (!dados[R][1]); // Segundo campo vazio indica título de seção
+
+                    if (isSection) {
+                        ws[cellRef].s.fill = { fgColor: { rgb: '4472c4' } };
+                        ws[cellRef].s.font = { color: { rgb: 'FFFFFF' }, bold: true, sz: 12 };
+                    }
+
+                    // Estilo Cabeçalhos de Tabela (MÊS, DATA, SETOR)
+                    const isTableHeader = typeof rowVal === 'string' && (
+                        rowVal === 'MÊS' || rowVal === 'DATA' || rowVal === 'SETOR'
+                    );
+                    if (isTableHeader) {
+                        ws[cellRef].s.fill = { fgColor: { rgb: '1e3c72' } };
+                        ws[cellRef].s.font = { color: { rgb: 'FFFFFF' }, bold: true };
+                        ws[cellRef].s.alignment.horizontal = 'center';
+                    }
+                }
+            }
+
             ws['!cols'] = [
-                { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 15 },
-                { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 30 }
+                { wch: 22 }, { wch: 15 }, { wch: 15 }, { wch: 15 },
+                { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 40 }
             ];
 
             XLSX.utils.book_append_sheet(wb, ws, "Checklist");
