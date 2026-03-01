@@ -282,6 +282,63 @@
             gap: 20px;
             margin-top: 20px;
         }
+        /* CORREÇÃO DO LAYOUT - PARTE SUPERIOR */
+.max-w-7xl {
+    max-width: 100% !important;
+    width: 100%;
+    padding-left: 30px;
+    padding-right: 30px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Ajuste do container principal */
+.bg-white.rounded-xl.shadow-lg.p-6 {
+    width: 100%;
+}
+
+/* Grid de filtros ocupando toda largura */
+.grid-cols-1.md\:grid-cols-3 {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+/* Cards em grid responsivo */
+.consultores-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
+    width: 100%;
+}
+
+/* Ajuste do cabeçalho */
+.flex.flex-col.md\:flex-row {
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Remover qualquer margem negativa */
+body {
+    overflow-x: hidden;
+    margin: 0;
+    padding: 20px;
+}
+
+/* Ajuste do modal */
+.modal-content {
+    width: 98%;
+    max-width: 1800px;
+    margin: 0 auto;
+}
+
+/* Forçar tabela a ocupar toda largura */
+.excel-table {
+    min-width: 1400px;
+    width: 100%;
+    }
     </style>
 </head>
 <body>
