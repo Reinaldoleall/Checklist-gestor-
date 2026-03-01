@@ -339,6 +339,37 @@ body {
     min-width: 1400px;
     width: 100%;
     }
+        /* MELHORIAS PARA PDF */
+@media print {
+    body {
+        background: white;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .excel-container {
+        border: 2px solid #000;
+        box-shadow: none;
+    }
+    
+    .excel-table {
+        page-break-inside: avoid;
+    }
+    
+    .excel-table th {
+        background-color: #1e3c72 !important;
+        color: white !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    
+    .excel-table .subsection-title {
+        background-color: #4472c4 !important;
+        color: white !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
     </style>
 </head>
 <body>
@@ -1152,56 +1183,127 @@ body {
         }
     }
 
-    // EXPORTAR PDF
-    function exportarChecklistPDF() {
-        const content = document.getElementById('checklistContent');
-        if (!content) return;
-        
-        // Mostrar loading
-        const btn = event.target;
-        const textoOriginal = btn.innerHTML;
-        btn.innerHTML = '<span class="loading-spinner mr-2"></span> GERANDO PDF...';
-        btn.disabled = true;
-        
-        // Clonar o conteúdo para não afetar a visualização
-        const clone = content.cloneNode(true);
-        clone.style.width = '1400px';
-        clone.style.padding = '20px';
-        clone.style.background = 'white';
-        
-        // Criar elemento temporário
-        const tempDiv = document.createElement('div');
-        tempDiv.style.position = 'absolute';
-        tempDiv.style.left = '-9999px';
-        tempDiv.style.top = '0';
-        tempDiv.appendChild(clone);
-        document.body.appendChild(tempDiv);
-        
-        // Gerar PDF
+    // EXPORTAR PDF - VERSÃO CORRIGIDA (FOLHA COMPLETA)
+function exportarChecklistPDF() {
+    const content = document.getElementById('checklistContent');
+    if (!content || !dadosConsultorAtual) return;
+    
+    // Mostrar loading
+    const btn = event.target;
+    const textoOriginal = btn.innerHTML;
+    btn.innerHTML = '<span class="loading-spinner mr-2"></span> GERANDO PDF...';
+    btn.disabled = true;
+    
+    // Clonar o conteúdo para não afetar a visualização
+    const clone = content.cloneNode(true);
+    
+    // Ajustar o clone para melhor impressão
+    clone.style.width = '1600px';
+    clone.style.margin = '0 auto';
+    clone.style.padding = '20px';
+    clone.style.background = 'white';
+    clone.style.fontFamily = 'Arial, sans-serif';
+    
+    // Garantir que todas as tabelas tenham bordas visíveis
+    const tables = clone.querySelectorAll('.excel-table');
+    tables.forEach(table => {
+        table.style.width = '100%';
+        table.style.borderCollapse = 'collapse';
+    });
+    
+    const cells = clone.querySelectorAll('td, th');
+    cells.forEach(cell => {
+        cell.style.border = '1px solid #000';
+        cell.style.padding = '8px 6px';
+        cell.style.fontSize = '11px';
+    });
+    
+    // Criar elemento temporário
+    const tempDiv = document.createElement('div');
+    tempDiv.style.position = 'absolute';
+    tempDiv.style.left = '-9999px';
+    tempDiv.style.top = '0';
+    tempDiv.style.width = '1600px';
+    tempDiv.style.backgroundColor = '#ffffff';
+    tempDiv.appendChild(clone);
+    document.body.appendChild(tempDiv);
+    
+    // Aguardar um pouco para o CSS ser aplicado
+    setTimeout(() => {
+        // Gerar PDF com configurações otimizadas
         html2canvas(clone, {
-            scale: 2,
+            scale: 2, // Alta resolução
             backgroundColor: '#ffffff',
             logging: false,
             allowTaint: true,
-            useCORS: true
+            useCORS: true,
+            windowWidth: 1600,
+            windowHeight: 2000
         }).then((canvas) => {
             const imgData = canvas.toDataURL('image/png');
+            
+            // Criar PDF em paisagem com tamanho A4
             const pdf = new jspdf.jsPDF({
                 orientation: 'landscape',
                 unit: 'mm',
                 format: 'a4'
             });
             
+            // Calcular dimensões para preencher a página
             const pdfWidth = pdf.internal.pageSize.getWidth();
             const pdfHeight = pdf.internal.pageSize.getHeight();
+            
+            // Calcular proporções para preencher a folha inteira
             const imgWidth = canvas.width;
             const imgHeight = canvas.height;
-            const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-            const width = imgWidth * ratio;
+            
+            // Calcular a escala para preencher a largura
+            const ratio = pdfWidth / imgWidth;
+            const width = pdfWidth;
             const height = imgHeight * ratio;
             
-            pdf.addImage(imgData, 'PNG', 0, 0, width, height);
-            pdf.save(`Checklist_${(dadosConsultorAtual.consultor || 'consultor').replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
+            // Se a altura ultrapassar, adicionar nova página
+            if (height <= pdfHeight) {
+                // Cabe na mesma página
+                pdf.addImage(imgData, 'PNG', 0, 0, width, height);
+            } else {
+                // Dividir em múltiplas páginas
+                let remainingHeight = imgHeight;
+                let yOffset = 0;
+                let pageIndex = 0;
+                
+                while (remainingHeight > 0) {
+                    if (pageIndex > 0) {
+                        pdf.addPage();
+                    }
+                    
+                    // Calcular altura da página atual
+                    const pageHeightInPixels = pdfHeight / ratio;
+                    const sourceHeight = Math.min(pageHeightInPixels, remainingHeight);
+                    
+                    // Recortar a imagem
+                    const canvasPage = document.createElement('canvas');
+                    canvasPage.width = imgWidth;
+                    canvasPage.height = sourceHeight;
+                    const ctx = canvasPage.getContext('2d');
+                    ctx.drawImage(canvas, 0, yOffset, imgWidth, sourceHeight, 0, 0, imgWidth, sourceHeight);
+                    
+                    const pageImgData = canvasPage.toDataURL('image/png');
+                    
+                    // Calcular altura no PDF
+                    const pageHeightPdf = sourceHeight * ratio;
+                    
+                    pdf.addImage(pageImgData, 'PNG', 0, 0, pdfWidth, pageHeightPdf);
+                    
+                    remainingHeight -= sourceHeight;
+                    yOffset += sourceHeight;
+                    pageIndex++;
+                }
+            }
+            
+            // Salvar PDF
+            const nomeArquivo = `Checklist_${(dadosConsultorAtual.consultor || 'consultor').replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+            pdf.save(nomeArquivo);
             
             // Remover elemento temporário
             document.body.removeChild(tempDiv);
@@ -1209,6 +1311,7 @@ body {
             // Restaurar botão
             btn.innerHTML = textoOriginal;
             btn.disabled = false;
+            
         }).catch(error => {
             console.error('Erro ao gerar PDF:', error);
             alert('Erro ao gerar PDF: ' + error.message);
@@ -1216,7 +1319,8 @@ body {
             btn.disabled = false;
             document.body.removeChild(tempDiv);
         });
-    }
+    }, 500); // Pequeno delay para garantir renderização
+}
 
     // EXPORTAR RELATÓRIO GERAL
     function exportarRelatorioGeral() {
