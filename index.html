@@ -754,18 +754,31 @@
                     if (consultores) {
                         Object.keys(consultores).forEach((key) => {
                             const c = consultores[key];
-                            // Usar 'perfil' se existir, senão usar o próprio nó (compatibilidade)
+                            const isNewModel = !!c.perfil;
                             const perfil = c.perfil || c;
 
-                            // Ignorar se não for um consultor válido (ex: metadados perdidos)
+                            // Ignorar se não for um consultor válido
                             if (perfil.consultor || perfil.nome) {
-                                todosConsultores.push({
+                                const consultorObj = {
                                     id: key,
                                     nome: perfil.consultor || perfil.nome || key.replace(/_/g, ' '),
                                     ...perfil,
-                                    // Manter checklists aqui para contagem/busca rápida se necessário
-                                    checklists: c.checklists || null
-                                });
+                                    checklists: c.checklists || null,
+                                    isLegacy: !isNewModel
+                                };
+
+                                // Se for legado e tiver dados de loja no root, fingir um checklist
+                                if (!isNewModel && (c.revenda || c.loja)) {
+                                    consultorObj.countHistorico = 1;
+                                    // Se não tiver ultimaAtualizacao, usar dataSalvamento do root
+                                    if (!consultorObj.ultimaAtualizacao) {
+                                        consultorObj.ultimaAtualizacao = c.dataSalvamento || null;
+                                    }
+                                } else {
+                                    consultorObj.countHistorico = c.checklists ? Object.keys(c.checklists).length : 0;
+                                }
+
+                                todosConsultores.push(consultorObj);
                             }
                         });
                     }
@@ -857,7 +870,7 @@
             consultoresFiltrados.forEach((c, index) => {
                 const status = c.online ? 'online' : 'offline';
                 const ultimaVez = c.ultimaAtualizacao ? new Date(c.ultimaAtualizacao).toLocaleDateString('pt-BR') : 'Sem registro';
-                const countRegistros = c.checklists ? Object.keys(c.checklists).length : 0;
+                const countRegistros = c.countHistorico || 0;
 
                 const card = document.createElement('div');
                 card.className = 'card-consultor group';
