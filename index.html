@@ -746,6 +746,8 @@
         // CARREGAR CONSULTORES
         function carregarConsultores() {
             document.getElementById('loadingConsultores').style.display = 'block';
+
+            // Buscar TODOS os consultores com seus históricos
             database.ref('consultores').once('value')
                 .then((snapshot) => {
                     const consultores = snapshot.val();
@@ -754,42 +756,83 @@
                     if (consultores) {
                         Object.keys(consultores).forEach((key) => {
                             const c = consultores[key];
-                            const isNewModel = !!c.perfil;
-                            const perfil = c.perfil || c;
+                            const perfil = c.perfil || {};
 
-                            // Ignorar se não for um consultor válido
-                            if (perfil.consultor || perfil.nome) {
-                                const consultorObj = {
-                                    id: key,
-                                    nome: perfil.consultor || perfil.nome || key.replace(/_/g, ' '),
-                                    ...perfil,
-                                    checklists: c.checklists || null,
-                                    isLegacy: !isNewModel
-                                };
+                            // ===== CORREÇÃO: Contar TODOS os checklists no histórico =====
+                            let listaChecklists = [];
+                            let countChecklists = 0;
+                            let ultimaData = null;
 
-                                // Se for legado e tiver dados de loja no root, fingir um checklist
-                                if (!isNewModel && (c.revenda || c.loja)) {
-                                    consultorObj.countHistorico = 1;
-                                    // Se não tiver ultimaAtualizacao, usar dataSalvamento do root
-                                    if (!consultorObj.ultimaAtualizacao) {
-                                        consultorObj.ultimaAtualizacao = c.dataSalvamento || null;
-                                    }
-                                } else {
-                                    consultorObj.countHistorico = c.checklists ? Object.keys(c.checklists).length : 0;
+                            if (c.checklists) {
+                                // Extrair todos os checklists do histórico
+                                listaChecklists = Object.keys(c.checklists).map(checkKey => ({
+                                    id: checkKey,
+                                    ...c.checklists[checkKey]
+                                }));
+
+                                countChecklists = listaChecklists.length;
+
+                                // Encontrar a data mais recente
+                                listaChecklists.sort((a, b) =>
+                                    (b.dataSalvamento || '').localeCompare(a.dataSalvamento || '')
+                                );
+
+                                if (listaChecklists.length > 0) {
+                                    ultimaData = listaChecklists[0].dataSalvamento;
                                 }
-
-                                todosConsultores.push(consultorObj);
+                            } else {
+                                // Verificar se há dados legados (formato antigo)
+                                if (c.revenda || c.loja) {
+                                    countChecklists = 1;
+                                    ultimaData = c.dataSalvamento || null;
+                                }
                             }
+
+                            // Criar objeto do consultor com TODAS as informações
+                            const consultorObj = {
+                                id: key,
+                                nome: perfil.consultor || perfil.nome || key.replace(/_/g, ' '),
+                                regional: perfil.regional || c.regional || '',
+                                cidade: perfil.cidade || c.cidade || '',
+                                uf: perfil.uf || c.uf || '',
+                                supervisor: perfil.supervisor || c.supervisor || '',
+                                coordenador: perfil.coordenador || c.coordenador || '',
+                                dataAdmissao: perfil.dataAdmissao || c.dataAdmissao || '',
+                                dataCertificacao: perfil.dataCertificacao || c.dataCertificacao || '',
+                                notaCertificacao: perfil.notaCertificacao || c.notaCertificacao || '',
+                                ultimaAtualizacao: ultimaData || perfil.ultimaAtualizacao || '',
+                                online: perfil.online || false,
+
+                                // Métricas importantes para o gestor
+                                totalChecklists: countChecklists,
+                                countHistorico: countChecklists, // Compatibilidade com cards
+                                checklists: c.checklists || null, // Manter todos os checklists
+                                perfil: perfil,
+
+                                // Para compatibilidade com versões antigas
+                                ...c // Manter dados legados
+                            };
+
+                            todosConsultores.push(consultorObj);
                         });
                     }
 
+                    // Ordenar por nome padrão
+                    todosConsultores.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+
                     document.getElementById('totalConsultores').innerText = todosConsultores.length;
                     document.getElementById('loadingConsultores').style.display = 'none';
+
+                    // Atualizar filtros e exibir
+                    carregarRegionais();
                     filtrarConsultores();
+
+                    console.log(`📊 Total de consultores: ${todosConsultores.length}`);
                 })
                 .catch((error) => {
                     console.error('Erro:', error);
                     document.getElementById('loadingConsultores').style.display = 'none';
+                    alert('Erro ao carregar consultores: ' + error.message);
                 });
         }
 
@@ -936,39 +979,73 @@
         function abrirChecklist(consultorId) {
             consultorSelecionado = consultorId;
 
-            // Resetar abas do modal
-            mudarAba('checklist');
+            // Mostrar loading
+            document.getElementById('checklistContent').innerHTML = `
+        <div class="text-center py-20">
+            <i class="fas fa-circle-notch spin text-3xl text-blue-500"></i>
+            <p class="mt-4 text-slate-500">Carregando histórico completo...</p>
+        </div>
+    `;
 
+            // Resetar abas
+            mudarAba('completo');
+
+            // Buscar TODOS os dados do consultor (perfil + histórico completo)
             database.ref('consultores/' + consultorId).once('value')
                 .then((snapshot) => {
                     const fullData = snapshot.val();
-                    if (!fullData) return;
+                    if (!fullData) {
+                        alert('Dados não encontrados!');
+                        return;
+                    }
 
-                    // Estrutura nova vs antiga
                     const perfil = fullData.perfil || fullData;
-                    const checklists = fullData.checklists || null;
 
-                    document.getElementById('modalTitulo').innerHTML = `<i class="fas fa-user-circle mr-2 text-[#3b82f6]"></i> ${perfil.consultor || consultorId}`;
+                    // Atualizar título do modal
+                    document.getElementById('modalTitulo').innerHTML = `
+                <i class="fas fa-user-circle mr-2 text-[#3b82f6]"></i> 
+                ${perfil.consultor || consultorId}
+            `;
+
                     document.getElementById('modalSubtitulo').innerHTML = `
-                        <span class="opacity-70">Unidade:</span> ${perfil.cidade || '---'} 
-                        <span class="mx-2 opacity-30">|</span> 
-                        <span class="opacity-70">Regional:</span> ${perfil.regional || '---'}
-                    `;
+                <span class="opacity-70">Regional:</span> ${perfil.regional || '---'} 
+                <span class="mx-2 opacity-30">|</span> 
+                <span class="opacity-70">Total de registros:</span> 
+                ${fullData.checklists ? Object.keys(fullData.checklists).length : (fullData.revenda ? 1 : 0)}
+            `;
 
                     document.getElementById('modalChecklist').classList.add('active');
 
-                    if (checklists) {
-                        renderizarListaHistorico(consultorId, checklists);
-                    } else {
-                        // Caso seja um registro antigo ou sem histórico (V1)
+                    // ===== CORREÇÃO: VERIFICAR SE TEM HISTÓRICO =====
+                    if (fullData.checklists && Object.keys(fullData.checklists).length > 0) {
+                        // TEM MÚLTIPLOS CHECKLISTS - Mostrar lista do histórico
+                        renderizarListaHistorico(consultorId, fullData.checklists);
+                    } else if (fullData.revenda || fullData.loja) {
+                        // É UM REGISTRO ÚNICO (formato antigo)
                         dadosConsultorSelecionado = fullData;
                         renderizarChecklistCompleto(fullData);
                         gerarCalendario(fullData);
                         renderizarVerso(fullData);
+                    } else {
+                        // NÃO TEM NENHUM CHECKLIST
+                        document.getElementById('checklistContent').innerHTML = `
+                    <div class="text-center py-20 bg-slate-50 rounded-2xl">
+                        <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <i class="fas fa-clipboard-list text-3xl text-slate-300"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">Nenhum checklist encontrado</h3>
+                        <p class="text-slate-500">Este consultor ainda não possui registros de visita.</p>
+                    </div>
+                `;
                     }
                 })
                 .catch((error) => {
                     alert('Erro ao carregar dados: ' + error.message);
+                    document.getElementById('checklistContent').innerHTML = `
+                <div class="text-center py-20 text-red-500">
+                    Erro ao carregar: ${error.message}
+                </div>
+            `;
                 });
         }
 
@@ -982,7 +1059,17 @@
                 return;
             }
 
+            // ===== CORREÇÃO: ORDENAR POR DATA (MAIS RECENTE PRIMEIRO) =====
             const historyKeys = Object.keys(checklists).sort((a, b) => {
+                // Tentar ordenar por timestamp primeiro (mais preciso)
+                const timestampA = checklists[a].timestamp || 0;
+                const timestampB = checklists[b].timestamp || 0;
+
+                if (timestampA && timestampB) {
+                    return timestampB - timestampA; // Decrescente
+                }
+
+                // Fallback para dataSalvamento
                 const dataA = checklists[a].dataSalvamento || '';
                 const dataB = checklists[b].dataSalvamento || '';
                 return dataB.localeCompare(dataA);
@@ -993,61 +1080,163 @@
                 return;
             }
 
-            let html = `
-                <div class="p-8 bg-slate-50 min-h-full">
-                    <div class="flex items-center justify-between mb-8">
-                        <div>
-                            <h2 class="text-3xl font-black text-slate-800 tracking-tight">Histórico de Visitas</h2>
-                            <p class="text-slate-500 font-medium">Selecione uma loja para ver o checklist completo.</p>
-                        </div>
-                        <div class="bg-blue-600 text-white px-6 py-2 rounded-2xl text-sm font-bold shadow-lg shadow-blue-200">
-                            ${historyKeys.length} registros
-                        </div>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            `;
-
+            // Agrupar por loja/mês para melhor visualização
+            const checklistsPorLoja = {};
             historyKeys.forEach(key => {
                 const c = checklists[key];
-                const dataObj = c.dataSalvamento ? new Date(c.dataSalvamento) : null;
-                const dataFormatada = dataObj ? dataObj.toLocaleDateString('pt-BR') : 'Sem data';
-                const horaFormatada = dataObj ? dataObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
-                const loja = c.loja?.revenda || 'Venda não identificada';
-                const filial = c.loja?.filial || '';
+                const lojaNome = c.loja?.revenda || 'Loja não identificada';
 
-                html += `
-                    <div onclick="abrirChecklistHistorico('${consultorId}', '${key}')" class="bg-white border border-slate-200 rounded-3xl p-6 hover:border-blue-500 hover:shadow-2xl hover:-translate-y-1 transition-all cursor-pointer group relative overflow-hidden">
-                        <div class="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-full -mr-12 -mt-12 group-hover:bg-blue-100 transition-all opacity-20"></div>
-                        
-                        <div class="relative">
-                            <div class="flex justify-between items-start mb-6">
-                                <div class="w-12 h-12 bg-slate-50 text-blue-600 rounded-2xl flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all">
-                                    <i class="fas fa-store text-xl"></i>
-                                </div>
-                                <div class="text-right">
-                                    <div class="text-xs font-black text-slate-400 uppercase tracking-widest">${dataFormatada}</div>
-                                    <div class="text-[10px] font-bold text-blue-500">${horaFormatada}</div>
-                                </div>
-                            </div>
-                            
-                            <h4 class="font-black text-slate-800 text-lg mb-1 leading-tight group-hover:text-blue-600 transition-colors">${loja}</h4>
-                            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 truncate">${filial || 'PADRÃO'}</p>
-                            
-                            <div class="flex items-center text-xs font-black text-blue-600 uppercase tracking-widest bg-blue-50 w-fit px-3 py-1 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-all">
-                                Analisar <i class="fas fa-arrow-right ml-2 text-[10px]"></i>
-                            </div>
-                        </div>
-                    </div>
-                `;
+                if (!checklistsPorLoja[lojaNome]) {
+                    checklistsPorLoja[lojaNome] = [];
+                }
+                checklistsPorLoja[lojaNome].push({ key, ...c });
             });
 
-            html += `</div></div>`;
-            content.innerHTML = html;
+            let html = `
+        <div class="p-8 bg-slate-50 min-h-full">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h2 class="text-3xl font-black text-slate-800 tracking-tight">
+                        <i class="fas fa-history mr-3 text-blue-500"></i>
+                        Histórico de Visitas
+                    </h2>
+                    <p class="text-slate-500 font-medium mt-1">
+                        Total de ${historyKeys.length} registros encontrados
+                    </p>
+                </div>
+                <div class="flex gap-3">
+                        <button onclick="limparDadosLoja()"
+                            class="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all border border-blue-500/20">
+                            <i class="fas fa-plus mr-1"></i> Novo Checklist
+                        </button>
+                </div>
+            </div>
+    `;
 
-            // Limpa as outras abas enquanto escolhe
-            document.getElementById('calendarioContent').innerHTML = '<div class="flex flex-col items-center justify-center h-64 text-slate-300"><i class="fas fa-mouse-pointer text-4xl mb-4"></i><p>Selecione um checklist no histórico</p></div>';
-            document.getElementById('versoContent').innerHTML = '';
+            // Mostrar agrupado por loja
+            Object.keys(checklistsPorLoja).sort().forEach(loja => {
+                const visitas = checklistsPorLoja[loja];
+
+                html += `
+            <div class="mb-8">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-store"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-800">${loja}</h3>
+                        <p class="text-xs text-slate-400 font-bold uppercase">${visitas.length} visita(s)</p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        `;
+
+                visitas.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)).forEach(v => {
+                    const dataObj = v.dataSalvamento ? new Date(v.dataSalvamento) : null;
+                    const dataFormatada = dataObj ? dataObj.toLocaleDateString('pt-BR') : 'Sem data';
+                    const horaFormatada = dataObj ? dataObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
+
+                    const filial = v.loja?.filial || '';
+                    const dataVisita = v.loja?.dataVisita || dataFormatada;
+
+                    html += `
+                <div onclick="abrirChecklistHistorico('${consultorId}', '${v.key}')" 
+                     class="bg-white border-2 border-slate-200 rounded-3xl p-6 hover:border-blue-500 hover:shadow-2xl hover:-translate-y-1 transition-all cursor-pointer group relative overflow-hidden">
+                    
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full -mr-16 -mt-16 group-hover:bg-blue-100 transition-all opacity-50"></div>
+                    
+                    <div class="relative">
+                        <div class="flex justify-between items-start mb-6">
+                            <div class="w-14 h-14 bg-gradient-to-br from-blue-50 to-slate-50 text-blue-600 rounded-2xl flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all border border-blue-100">
+                                <i class="fas fa-calendar-check text-2xl"></i>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xs font-black text-slate-400 uppercase tracking-widest">${dataVisita}</div>
+                                <div class="text-[10px] font-bold text-blue-500 bg-blue-50 px-2 py-1 rounded-lg mt-1">${horaFormatada}</div>
+                            </div>
+                        </div>
+                        
+                        <h4 class="font-black text-slate-800 text-lg mb-1 leading-tight group-hover:text-blue-600 transition-colors">${loja}</h4>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">${filial || 'FILIAL PADRÃO'}</p>
+                        
+                        <div class="flex items-center text-xs font-black text-blue-600 uppercase tracking-widest bg-blue-50 w-fit px-4 py-2 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-all">
+                            <i class="fas fa-search mr-2"></i> Analisar Relatório
+                        </div>
+                        
+                        <div class="mt-4 pt-4 border-t border-slate-100 flex justify-between text-xs text-slate-400">
+                            <span><i class="far fa-clock mr-1"></i> ID: ${v.key.substring(0, 8)}...</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+                });
+
+                html += `</div></div>`;
+            });
+
+            html += `</div>`;
+            content.innerHTML = html;
+        }
+
+        // FUNÇÃO NOVA - Exportar todo o histórico de um consultor
+        function exportarHistoricoCompleto(consultorId) {
+            database.ref(`consultores/${consultorId}/checklists`).once('value')
+                .then(snapshot => {
+                    const checklists = snapshot.val();
+                    if (!checklists) {
+                        alert('Nenhum checklist encontrado para exportar.');
+                        return;
+                    }
+
+                    const wb = XLSX.utils.book_new();
+                    const dadosRelatorio = [];
+
+                    // Cabeçalho
+                    dadosRelatorio.push(['RELATÓRIO COMPLETO - HISTÓRICO DE VISITAS']);
+                    dadosRelatorio.push(['Consultor ID:', consultorId]);
+                    dadosRelatorio.push(['Data Exportação:', new Date().toLocaleString('pt-BR')]);
+                    dadosRelatorio.push(['Total Registros:', Object.keys(checklists).length]);
+                    dadosRelatorio.push([]);
+
+                    // Cabeçalho das colunas
+                    dadosRelatorio.push([
+                        'Data Visita', 'Loja', 'Filial', 'Cidade', 'UF',
+                        'Gerente', 'Faturamento Loja', 'Faturamento Panasonic',
+                        'MPV Aplicado', 'Produtos Limpos', 'Observações'
+                    ]);
+
+                    // Dados de cada checklist
+                    Object.keys(checklists).sort().reverse().forEach(key => {
+                        const c = checklists[key];
+                        const loja = c.loja || {};
+
+                        dadosRelatorio.push([
+                            c.dataSalvamento ? new Date(c.dataSalvamento).toLocaleDateString('pt-BR') : '',
+                            loja.revenda || '',
+                            loja.filial || '',
+                            c.cidade || loja.cidadeUf?.split('/')[0] || '',
+                            c.uf || loja.cidadeUf?.split('/')[1] || '',
+                            loja.gerente || '',
+                            loja.faturamentoLoja || '',
+                            loja.faturamentoPanasonic || '',
+                            c.merchandising?.mpvAplicado || '',
+                            c.merchandising?.produtosLimpos || '',
+                            c.anotacoesGerais || ''
+                        ]);
+                    });
+
+                    const ws = XLSX.utils.aoa_to_sheet(dadosRelatorio);
+                    ws['!cols'] = [
+                        { wch: 12 }, { wch: 25 }, { wch: 10 }, { wch: 15 }, { wch: 5 },
+                        { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 10 }, { wch: 10 }, { wch: 40 }
+                    ];
+
+                    XLSX.utils.book_append_sheet(wb, ws, "Histórico Completo");
+                    XLSX.writeFile(wb, `Historico_Completo_${consultorId}_${new Date().toISOString().split('T')[0]}.xlsx`);
+
+                    alert(`✅ Relatório exportado com ${Object.keys(checklists).length} registros!`);
+                });
         }
 
         // VOLTAR PARA O HISTÓRICO
