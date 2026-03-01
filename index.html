@@ -1309,96 +1309,98 @@
 
             const wb = XLSX.utils.book_new();
             const dados = [];
+            const merges = [];
             const C = dadosConsultorSelecionado;
 
-            // CABEÇALHO
-            dados.push(['CHECK LIST 2026 - PANASONIC']);
-            dados.push(['CONSULTOR:', C.consultor, 'DATA DA EXPORTAÇÃO:', new Date().toLocaleDateString('pt-BR')]);
-            dados.push([]);
+            function addRow(arr) { dados.push(arr); return dados.length - 1; }
+            function addSection(title) {
+                const r = addRow([title.toUpperCase()]);
+                merges.push({ s: { r, c: 0 }, e: { r, c: 7 } });
+                return r;
+            }
+
+            // CABEÇALHO PRINCIPAL
+            const rHeader = addRow(['CHECK LIST 2026 - PANASONIC']);
+            merges.push({ s: { r: rHeader, c: 0 }, e: { r: rHeader, c: 7 } });
+            addRow(['CONSULTOR:', C.consultor, '', '', 'DATA:', new Date().toLocaleDateString('pt-BR')]);
+            merges.push({ s: { r: rHeader + 1, c: 1 }, e: { r: rHeader + 1, c: 3 } });
+            addRow([]);
 
             // INFORMAÇÕES CONSULTOR
-            dados.push(['INFORMAÇÕES DO CONSULTOR']);
-            dados.push(['Nome:', C.consultor, 'Regional:', C.regional || '']);
-            dados.push(['Data Admissão:', C.dataAdmissao || '', 'Cidade/UF:', `${C.cidade || ''}/${C.uf || ''}`]);
-            dados.push(['Supervisor:', C.supervisor || '', 'Coordenador:', C.coordenador || '']);
-            dados.push([]);
+            addSection('INFORMAÇÕES DO CONSULTOR');
+            addRow(['Nome:', C.consultor, '', '', 'Regional:', C.regional || '']);
+            merges.push({ s: { r: dados.length - 1, c: 1 }, e: { r: dados.length - 1, c: 3 } });
+            addRow(['Admissão:', C.dataAdmissao || '', '', '', 'Cidade/UF:', `${C.cidade || ''}/${C.uf || ''}`]);
+            merges.push({ s: { r: dados.length - 1, c: 1 }, e: { r: dados.length - 1, c: 3 } });
+            addRow(['Supervisor:', C.supervisor || '', '', '', 'Coordenador:', C.coordenador || '']);
+            merges.push({ s: { r: dados.length - 1, c: 1 }, e: { r: dados.length - 1, c: 3 } });
+            addRow([]);
 
             // CERTIFICAÇÃO
-            dados.push(['CERTIFICAÇÃO']);
-            dados.push(['Data da Certificação:', C.dataCertificacao || '', 'Nota:', C.notaCertificacao || '']);
-            dados.push([]);
+            addSection('CERTIFICAÇÃO');
+            addRow(['Data da Última Certificação:', C.dataCertificacao || '', '', '', 'Nota:', C.notaCertificacao || '']);
+            merges.push({ s: { r: dados.length - 1, c: 0 }, e: { r: dados.length - 1, c: 3 } });
+            addRow([]);
 
             // IDC
-            dados.push(['IDC - ÍNDICE DE DESEMPENHO']);
-            dados.push(['Mês', 'Nota', 'Apontamentos']);
+            addSection('IDC - ÍNDICE DE DESEMPENHO');
+            addRow(['MÊS', 'NOTA', '', 'APONTAMENTOS']);
+            merges.push({ s: { r: dados.length - 1, c: 1 }, e: { r: dados.length - 1, c: 2 } });
+            merges.push({ s: { r: dados.length - 1, c: 3 }, e: { r: dados.length - 1, c: 7 } });
+
             const mesesIDC = ['janeiro', 'fevereiro', 'marco', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
             mesesIDC.forEach((m) => {
                 const d = C.idc ? C.idc[m] || {} : {};
-                dados.push([m.toUpperCase(), d.nota || '', d.apontamento || '']);
+                const rIdx = addRow([m.toUpperCase(), d.nota || '', '', d.apontamento || '']);
+                merges.push({ s: { r: rIdx, c: 1 }, e: { r: rIdx, c: 2 } });
+                merges.push({ s: { r: rIdx, c: 3 }, e: { r: rIdx, c: 7 } });
             });
-            dados.push([]);
+            addRow([]);
 
             // LOJA
             if (C.loja) {
-                dados.push(['INFORMAÇÕES DA LOJA']);
-                dados.push(['Revenda:', C.loja.revenda || '', 'Filial:', C.loja.filial || '']);
-                dados.push(['Endereço:', C.loja.endereco || '']);
-                dados.push(['Gerente:', C.loja.gerente || '', 'Contato:', C.loja.contato || '']);
-                dados.push(['Faturamento Loja:', C.loja.faturamentoLoja || '', 'Faturamento Panasonic:', C.loja.faturamentoPanasonic || '']);
-                dados.push(['Ranking:', C.loja.ranking || '', 'Floor Share:', C.loja.floorShare || '']);
-                dados.push([]);
+                addSection('INFORMAÇÕES DA LOJA');
+                addRow(['Revenda:', C.loja.revenda || '', '', '', 'Filial:', C.loja.filial || '']);
+                merges.push({ s: { r: dados.length - 1, c: 1 }, e: { r: dados.length - 1, c: 3 } });
+                addRow(['Endereço:', C.loja.endereco || '']);
+                merges.push({ s: { r: dados.length - 1, c: 1 }, e: { r: dados.length - 1, c: 7 } });
+                addRow(['Gerente:', C.loja.gerente || '', '', '', 'Contato:', C.loja.contato || '']);
+                merges.push({ s: { r: dados.length - 1, c: 1 }, e: { r: dados.length - 1, c: 3 } });
+                addRow(['Faturamento Loja:', C.loja.faturamentoLoja || '', '', '', 'Fat. Panasonic:', C.loja.faturamentoPanasonic || '']);
+                merges.push({ s: { r: dados.length - 1, c: 1 }, e: { r: dados.length - 1, c: 3 } });
+                addRow(['Ranking:', C.loja.ranking || '', '', '', 'Floor Share:', C.loja.floorShare || '']);
+                merges.push({ s: { r: dados.length - 1, c: 1 }, e: { r: dados.length - 1, c: 3 } });
+                addRow([]);
             }
 
             // DESTAQUES
             if (C.destaques) {
-                dados.push(['DESTAQUE DE VENDAS']);
-                dados.push(['Setor', 'Marca', 'Modelo', 'Preço']);
-                dados.push(['Geladeira', C.destaques.geladeira?.marca || '', C.destaques.geladeira?.modelo || '', C.destaques.geladeira?.preco || '']);
-                dados.push(['Lavadora', C.destaques.lavadora?.marca || '', C.destaques.lavadora?.modelo || '', C.destaques.lavadora?.preco || '']);
-                dados.push(['Micro-ondas', C.destaques.microondas?.marca || '', C.destaques.microondas?.modelo || '', C.destaques.microondas?.preco || '']);
-                dados.push(['Outros Destaques:', C.destaques.outros || '']);
-                dados.push([]);
-            }
-
-            // PROGRAMAS
-            if (C.programas) {
-                dados.push(['PROGRAMAS E CAMPANHAS']);
-                dados.push(['Conhecem programa:', C.programas.conhecemPrograma || '']);
-                dados.push(['Cadastrados:', C.programas.cadastrados || '']);
-                dados.push(['Pendência:', C.programas.pendencia || '']);
-                dados.push(['OBS Cadastro:', C.programas.obsCadastro || '']);
-                dados.push([]);
+                addSection('DESTAQUE DE VENDAS - LINHA BRANCA');
+                addRow(['SETOR', 'MARCA', 'MODELO', 'PREÇO']);
+                addRow(['Geladeira', C.destaques.geladeira?.marca || '', C.destaques.geladeira?.modelo || '', C.destaques.geladeira?.preco || '']);
+                addRow(['Lavadora', C.destaques.lavadora?.marca || '', C.destaques.lavadora?.modelo || '', C.destaques.lavadora?.preco || '']);
+                addRow(['Micro-ondas', C.destaques.microondas?.marca || '', C.destaques.microondas?.modelo || '', C.destaques.microondas?.preco || '']);
+                addRow(['OUTROS:', C.destaques.outros || '']);
+                merges.push({ s: { r: dados.length - 1, c: 1 }, e: { r: dados.length - 1, c: 7 } });
+                addRow([]);
             }
 
             // LANÇAMENTOS
             if (C.lancamentos && C.lancamentos.length > 0) {
-                dados.push(['LANÇAMENTOS - INTRODUÇÃO DE PRODUTO']);
-                dados.push(['Data', 'Marca', 'Produto', 'Modelo', 'Preço']);
+                addSection('LANÇAMENTOS - INTRODUÇÃO DE PRODUTO');
+                addRow(['DATA', 'MARCA', 'PRODUTO', 'MODELO', 'PREÇO']);
                 C.lancamentos.forEach(l => {
-                    dados.push([l.data || '', l.marca || '', l.produto || '', l.modelo || '', l.preco || '']);
+                    addRow([l.data || '', l.marca || '', l.produto || '', l.modelo || '', l.preco || '']);
                 });
-                dados.push([]);
-            }
-
-            // METAS E MERCHANDISING
-            if (C.metas || C.merchandising) {
-                dados.push(['TREINAMENTO E MERCHANDISING']);
-                if (C.metas) {
-                    dados.push(['Meta Treinamento:', C.metas.metaTreinamento || '', 'Pessoas Treinadas:', C.metas.metaPessoas || '']);
-                }
-                if (C.merchandising) {
-                    dados.push(['MPV Aplicado:', C.merchandising.mpvAplicado || '', 'Motivo:', C.merchandising.motivoMpv || '']);
-                    dados.push(['Produtos Limpos:', C.merchandising.produtosLimpos || '', 'Motivo:', C.merchandising.motivoLimpeza || '']);
-                }
-                dados.push([]);
+                addRow([]);
             }
 
             // VISITAS
             if (C.visitas && C.visitas.length > 0) {
-                dados.push(['VISITAS RECEBIDAS (HISTÓRICO)']);
-                dados.push(['Data', 'Representante', 'Visto', 'Ferramenta', 'Domínio', 'Uniforme', 'PDV', 'Observação']);
+                addSection('VISITAS RECEBIDAS (HISTÓRICO)');
+                addRow(['DATA', 'NOME', 'VISTO', 'FERRAMENTA', 'DOMÍNIO', 'UNIFORME', 'PDV', 'OBSERVAÇÃO']);
                 C.visitas.forEach(v => {
-                    dados.push([
+                    addRow([
                         v.data || '', v.nome || '', v.visto || '',
                         v.ferramenta || '', v.dominio || '', v.uniforme || '',
                         v.pdv || '', v.observacao || ''
@@ -1407,11 +1409,14 @@
             }
 
             const ws = XLSX.utils.aoa_to_sheet(dados);
-            ws['!cols'] = [{ wch: 25 }, { wch: 25 }, { wch: 25 }, { wch: 25 }, { wch: 15 }];
+            ws['!merges'] = merges;
+            ws['!cols'] = [
+                { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 15 },
+                { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 30 }
+            ];
 
-            XLSX.utils.book_append_sheet(wb, ws, "Checklist Completo");
-            const nomeArquivo = `Relatorio_Panasonic_${(C.consultor || 'consultor').replace(/\s+/g, '_')}_2026.xlsx`;
-            XLSX.writeFile(wb, nomeArquivo);
+            XLSX.utils.book_append_sheet(wb, ws, "Checklist");
+            XLSX.writeFile(wb, `Relatorio_Panasonic_${C.consultor.replace(/\s+/g, '_')}_2026.xlsx`);
         }
 
         // EXPORTAR RELATÓRIO GERAL
@@ -1474,7 +1479,7 @@
             }
         }
 
-        async function exportarChecklistComoPDF() {
+        async function exportarChecklistComoPDF(event) {
             if (!dadosConsultorSelecionado) return;
 
             const { jsPDF } = window.jspdf;
@@ -1482,47 +1487,50 @@
             const btn = event.currentTarget;
             const originalText = btn.innerHTML;
 
-            btn.innerHTML = '<i class="fas fa-circle-notch spin mr-2"></i> Processando PDF...';
+            btn.innerHTML = '<i class="fas fa-circle-notch spin mr-2"></i> Ajustando para A4...';
             btn.disabled = true;
 
             try {
-                // Configuração para alta qualidade
+                // Forçar scroll para o topo para garantir captura total
+                captureArea.scrollIntoView();
+
                 const canvas = await html2canvas(captureArea, {
                     scale: 2,
                     useCORS: true,
                     logging: false,
-                    backgroundColor: '#ffffff'
+                    backgroundColor: '#ffffff',
+                    windowWidth: captureArea.scrollWidth,
+                    windowHeight: captureArea.scrollHeight
                 });
 
                 const imgData = canvas.toDataURL('image/png');
                 const pdf = new jsPDF('p', 'mm', 'a4');
 
-                const imgProps = pdf.getImageProperties(imgData);
                 const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                const pdfHeight = pdf.internal.pageSize.getHeight();
 
-                // Tratar múltiplas páginas se necessário
-                let heightLeft = pdfHeight;
-                let position = 0;
-                const pageHeight = pdf.internal.pageSize.getHeight();
+                const imgProps = pdf.getImageProperties(imgData);
+                const ratio = imgProps.width / imgProps.height;
 
-                pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
-                heightLeft -= pageHeight;
+                // AJUSTE CRÍTICO: Escalonar para caber em uma única folha A4
+                let finalWidth = pdfWidth - 20; // 10mm margem
+                let finalHeight = finalWidth / ratio;
 
-                while (heightLeft >= 0) {
-                    position = heightLeft - pdfHeight;
-                    pdf.addPage();
-                    pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
-                    heightLeft -= pageHeight;
+                if (finalHeight > (pdfHeight - 20)) {
+                    finalHeight = pdfHeight - 20;
+                    finalWidth = finalHeight * ratio;
                 }
 
-                const nomeArquivo = `Checklist_${dadosConsultorSelecionado.consultor.replace(/\s+/g, '_')}_2026.pdf`;
-                pdf.save(nomeArquivo);
+                const offsetX = (pdfWidth - finalWidth) / 2;
+                const offsetY = 10;
 
-                mostrarStatus('✅ PDF gerado com sucesso!', 'sucesso');
+                pdf.addImage(imgData, 'PNG', offsetX, offsetY, finalWidth, finalHeight);
+                pdf.save(`Checklist_Panasonic_${dadosConsultorSelecionado.consultor.replace(/\s+/g, '_')}_2026.pdf`);
+
+                mostrarStatus('✅ PDF Ajustado Gerado!', 'sucesso');
             } catch (error) {
                 console.error('Erro PDF:', error);
-                alert('Erro ao gerar PDF. Verifique o console.');
+                alert('Erro ao gerar PDF ajustado.');
             } finally {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
