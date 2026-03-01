@@ -28,28 +28,11 @@
         
         body {
             background: #f0f2f5;
+            padding: 20px;
             margin: 0;
-            padding: 0;
         }
         
-        /* CORREÇÃO DO LAYOUT - MAIS ESPAÇO NAS LATERAIS */
-        .container-principal {
-            width: 100%;
-            max-width: 1600px;
-            margin: 0 auto;
-            padding: 0 30px;
-        }
-        
-        .max-w-7xl {
-            max-width: 1600px !important;
-            width: 100%;
-            padding-left: 30px;
-            padding-right: 30px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        
-        /* Estilo Excel para visualização */
+        /* Estilo EXATAMENTE como o checklist original */
         .excel-container {
             background: white;
             border: 2px solid #000;
@@ -62,31 +45,54 @@
             border-collapse: collapse;
             width: 100%;
             min-width: 1400px;
+            table-layout: fixed;
+        }
+        
+        .excel-table td, .excel-table th {
+            border: 1px solid #000000;
+            padding: 8px 6px;
+            vertical-align: middle;
+            overflow: visible;
+            white-space: normal;
+            word-wrap: break-word;
             font-size: 12px;
         }
         
         .excel-table th {
-            background: #1e3c72;
+            background-color: #1e3c72;
             color: white;
             font-weight: 600;
-            padding: 8px 12px;
-            border: 1px solid #000;
+            font-size: 12px;
             text-align: center;
-            white-space: nowrap;
         }
         
-        .excel-table td {
-            border: 1px solid #000;
-            padding: 8px 12px;
-            vertical-align: top;
+        .section-title {
+            background-color: #1e3c72;
+            color: white;
+            padding: 10px;
+            font-weight: bold;
+            font-size: 16px;
+            text-align: center;
+            border: 2px solid #000;
         }
         
-        .excel-table .section-title {
+        .subsection-title {
             background-color: #4472c4;
             color: white;
-            font-weight: bold;
-            text-align: center;
-            font-size: 13px;
+            padding: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1px solid #000;
+        }
+        
+        .checkbox-view {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #e0e0e0;
+            border: 1px solid #999;
+            border-radius: 4px;
+            margin: 2px;
+            font-size: 11px;
         }
         
         .card-consultor {
@@ -95,6 +101,7 @@
             background: white;
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            cursor: pointer;
         }
         
         .card-consultor:hover {
@@ -156,10 +163,6 @@
             box-shadow: 0 4px 12px rgba(30,60,114,0.3);
         }
         
-        .btn-excel:active {
-            transform: translateY(0);
-        }
-        
         .btn-excel-green {
             background: #2e7d32;
         }
@@ -170,10 +173,6 @@
         
         .btn-excel-red {
             background: #c62828;
-        }
-        
-        .btn-excel-red:hover {
-            background: #b71c1c;
         }
         
         /* Modal */
@@ -198,7 +197,7 @@
             background: white;
             border-radius: 16px;
             width: 98%;
-            max-width: 1800px;
+            max-width: 1600px;
             max-height: 95vh;
             overflow-y: auto;
             padding: 30px;
@@ -230,36 +229,6 @@
             background: #f0f0f0;
         }
         
-        .calendar-day {
-            border: 1px solid #e0e0e0;
-            min-height: 100px;
-            padding: 10px;
-            position: relative;
-            background: white;
-        }
-        
-        .calendar-day.has-checklist {
-            background: #e8f5e9;
-            border-color: #2e7d32;
-        }
-        
-        .calendar-day .day-number {
-            font-weight: 600;
-            margin-bottom: 4px;
-            font-size: 14px;
-        }
-        
-        .checklist-indicator {
-            font-size: 10px;
-            background: #2e7d32;
-            color: white;
-            padding: 2px 6px;
-            border-radius: 4px;
-            display: inline-block;
-            margin-top: 4px;
-        }
-        
-        /* Loading */
         .loading-spinner {
             border: 3px solid #f3f3f3;
             border-top: 3px solid #1e3c72;
@@ -275,36 +244,13 @@
             100% { transform: rotate(360deg); }
         }
 
-        .checkbox-view {
-            display: inline-block;
-            padding: 4px 12px;
-            background: #e0e0e0;
-            border: 1px solid #999;
-            border-radius: 4px;
-            margin: 2px;
-            font-size: 11px;
-        }
-
-        .section-header {
-            background-color: #1e3c72;
-            color: white;
-            padding: 12px;
-            font-weight: bold;
-            font-size: 16px;
-            border: 2px solid #000;
-            text-align: center;
-        }
-        
-        /* Grid de cards */
-        #listaConsultores {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 24px;
-            margin-top: 24px;
-        }
+        /* Ajuste de largura das colunas para visualização */
+        .col-mes { width: 10%; }
+        .col-nota { width: 10%; }
+        .col-apont { width: 80%; }
     </style>
 </head>
-<body class="p-8">
+<body>
 
 <!-- MODAL DE LOGIN -->
 <div id="loginModal" class="modal active">
@@ -326,62 +272,44 @@
         <button onclick="fazerLogin()" class="btn-excel w-full justify-center text-base py-3" id="btnLogin">
             ENTRAR NO PAINEL GESTOR
         </button>
-        
-        <div class="mt-4 text-sm text-gray-600 text-center">
-            Apenas usuários com perfil de gestor têm acesso
-        </div>
     </div>
 </div>
 
 <!-- PAINEL PRINCIPAL -->
 <div id="painelGestor" style="display: none;">
     <!-- Header -->
-    <div class="max-w-7xl mx-auto mb-8">
-        <div class="bg-white rounded-xl shadow-lg p-8">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div class="max-w-7xl mx-auto mb-6">
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex justify-between items-center">
                 <div>
-                    <h1 class="text-3xl font-bold text-[#1e3c72]">
-                        <i class="fas fa-chart-line mr-3"></i>Painel do Gestor
+                    <h1 class="text-2xl font-bold text-[#1e3c72]">
+                        <i class="fas fa-chart-line mr-3"></i>Painel do Gestor - Check Lists 2026
                     </h1>
-                    <p class="text-gray-600 mt-2 text-lg">
-                        <i class="fas fa-users mr-2"></i>
-                        <span id="totalConsultores">0</span> consultores ativos
+                    <p class="text-gray-600 mt-1">
+                        <span id="totalConsultores">0</span> consultores cadastrados
                     </p>
                 </div>
                 <div class="flex gap-3">
-                    <button onclick="exportarRelatorioGeral()" class="btn-excel btn-excel-green text-base">
+                    <button onclick="exportarRelatorioGeral()" class="btn-excel btn-excel-green">
                         <i class="fas fa-file-excel"></i> RELATÓRIO GERAL
                     </button>
-                    <button onclick="fazerLogout()" class="btn-excel btn-excel-red text-base">
+                    <button onclick="fazerLogout()" class="btn-excel btn-excel-red">
                         <i class="fas fa-sign-out-alt"></i> SAIR
                     </button>
                 </div>
             </div>
             
             <!-- Filtros -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8">
-                <div>
-                    <label class="block text-sm font-medium mb-2">Buscar consultor</label>
-                    <input type="text" id="filtroNome" class="filter-input" placeholder="Nome ou regional..." onkeyup="filtrarConsultores()">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-2">Filtrar por regional</label>
-                    <select id="filtroRegional" class="filter-input" onchange="filtrarConsultores()">
-                        <option value="">TODAS</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-2">Mês/Ano</label>
-                    <input type="month" id="filtroMes" class="filter-input" value="2026-03" onchange="filtrarConsultores()">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-2">Ordenar por</label>
-                    <select id="filtroOrdem" class="filter-input" onchange="filtrarConsultores()">
-                        <option value="nome">Nome (A-Z)</option>
-                        <option value="data">Mais recentes</option>
-                        <option value="checklists">Mais checklists</option>
-                    </select>
-                </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                <input type="text" id="filtroNome" class="filter-input" placeholder="Buscar consultor..." onkeyup="filtrarConsultores()">
+                <select id="filtroRegional" class="filter-input" onchange="filtrarConsultores()">
+                    <option value="">Todas as regionais</option>
+                </select>
+                <select id="filtroOrdem" class="filter-input" onchange="filtrarConsultores()">
+                    <option value="nome">Ordenar por Nome</option>
+                    <option value="data">Mais recentes</option>
+                    <option value="checklists">Mais checklists</option>
+                </select>
             </div>
         </div>
     </div>
@@ -390,17 +318,11 @@
     <div class="max-w-7xl mx-auto">
         <div id="loadingConsultores" class="text-center py-12">
             <div class="loading-spinner mx-auto"></div>
-            <p class="mt-4 text-gray-600 text-lg">Carregando consultores...</p>
+            <p class="mt-4">Carregando consultores...</p>
         </div>
         
-        <div id="listaConsultores" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div id="listaConsultores" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <!-- Cards serão inseridos aqui -->
-        </div>
-        
-        <div id="semResultados" class="text-center py-12 hidden">
-            <i class="fas fa-search text-6xl text-gray-300 mb-4"></i>
-            <h3 class="text-xl font-medium text-gray-600">Nenhum consultor encontrado</h3>
-            <p class="text-gray-500">Tente ajustar os filtros de busca</p>
         </div>
     </div>
 </div>
@@ -410,68 +332,19 @@
     <div class="modal-content">
         <span class="modal-close" onclick="fecharModal()">&times;</span>
         
-        <div id="modalHeader" class="mb-6">
-            <h2 class="text-2xl font-bold text-[#1e3c72]" id="modalTitulo"></h2>
+        <div class="mb-4">
+            <h2 class="text-xl font-bold text-[#1e3c72]" id="modalTitulo"></h2>
             <p class="text-gray-600" id="modalSubtitulo"></p>
         </div>
         
-        <!-- Status da conexão -->
-        <div id="statusConexaoModal" class="mb-4 p-3 text-sm rounded hidden"></div>
-        
-        <!-- Abas -->
-        <div class="border-b border-gray-200 mb-6">
-            <ul class="flex flex-wrap -mb-px">
-                <li class="mr-2">
-                    <a href="#" onclick="mudarAba('completo')" class="inline-block py-3 px-6 border-b-2 border-[#1e3c72] text-[#1e3c72] font-medium text-base" id="abaCompletoLink">📋 CHECKLIST COMPLETO</a>
-                </li>
-                <li class="mr-2">
-                    <a href="#" onclick="mudarAba('calendario')" class="inline-block py-3 px-6 border-b-2 border-transparent hover:border-gray-300 text-gray-600 text-base" id="abaCalendarioLink">📅 CALENDÁRIO</a>
-                </li>
-                <li class="mr-2">
-                    <a href="#" onclick="mudarAba('verso')" class="inline-block py-3 px-6 border-b-2 border-transparent hover:border-gray-300 text-gray-600 text-base" id="abaVersoLink">📋 VERSO (VISITAS)</a>
-                </li>
-            </ul>
+        <div class="flex gap-2 mb-4">
+            <button onclick="exportarChecklistAtual()" class="btn-excel btn-excel-green">
+                <i class="fas fa-file-excel"></i> EXPORTAR EXCEL
+            </button>
         </div>
         
-        <!-- Aba COMPLETO -->
-        <div id="abaCompleto" class="aba-conteudo">
-            <div id="checklistContent" class="overflow-x-auto">
-                <div class="text-center py-12">
-                    <div class="loading-spinner mx-auto"></div>
-                    <p class="mt-4">Carregando checklist completo...</p>
-                </div>
-            </div>
-            
-            <div class="flex gap-3 mt-6 justify-end">
-                <button onclick="exportarChecklistAtual()" class="btn-excel btn-excel-green text-base">
-                    <i class="fas fa-file-excel"></i> EXPORTAR EXCEL COMPLETO
-                </button>
-            </div>
-        </div>
-        
-        <!-- Aba CALENDÁRIO -->
-        <div id="abaCalendario" class="aba-conteudo hidden">
-            <div class="mb-4 flex gap-4 items-center">
-                <button onclick="mesAnterior()" class="btn-excel">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-                <span id="mesAtual" class="text-xl font-bold">Março 2026</span>
-                <button onclick="proximoMes()" class="btn-excel">
-                    <i class="fas fa-chevron-right"></i>
-                </button>
-            </div>
-            
-            <div id="calendario" class="grid grid-cols-7 gap-1">
-                <!-- Calendário gerado aqui -->
-            </div>
-        </div>
-        
-        <!-- Aba VERSO -->
-        <div id="abaVerso" class="aba-conteudo hidden">
-            <h3 class="text-lg font-bold mb-4">📋 VISITAS RECEBIDAS</h3>
-            <div id="versoContent" class="overflow-x-auto">
-                <!-- Conteúdo do verso -->
-            </div>
+        <div id="checklistContent" class="overflow-x-auto">
+            <!-- Checklist será renderizado aqui -->
         </div>
     </div>
 </div>
@@ -485,38 +358,28 @@
         projectId: "checklist-94b12",
         storageBucket: "checklist-94b12.firebasestorage.app",
         messagingSenderId: "471194751883",
-        appId: "1:471194751883:web:b3ea0cad2212d5e0c6d58e",
-        measurementId: "G-KJBZ2F3ZZE"
+        appId: "1:471194751883:web:b3ea0cad2212d5e0c6d58e"
     };
 
-    // Inicializar Firebase
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const database = firebase.database();
 
-    // Variáveis globais
     let todosConsultores = [];
-    let consultoresFiltrados = [];
     let consultorSelecionado = null;
-    let dadosConsultorSelecionado = null;
-    let mesCalendario = new Date(2026, 2);
-    let usuarioAtual = null;
 
-    // Verificar autenticação
+    // VERIFICA AUTENTICAÇÃO
     auth.onAuthStateChanged((user) => {
         if (user) {
             database.ref('usuarios/' + user.uid).once('value')
                 .then((snapshot) => {
                     const userData = snapshot.val();
                     if (userData && userData.tipo === 'gestor') {
-                        usuarioAtual = user;
                         document.getElementById('loginModal').classList.remove('active');
                         document.getElementById('painelGestor').style.display = 'block';
                         carregarConsultores();
-                        carregarRegionais();
-                        mostrarStatus('🟢 Conectado como gestor', 'sucesso');
                     } else {
-                        alert('Acesso negado! Apenas gestores podem acessar este painel.');
+                        alert('Acesso negado! Apenas gestores.');
                         auth.signOut();
                     }
                 });
@@ -526,27 +389,11 @@
         }
     });
 
-    function mostrarStatus(msg, tipo) {
-        const statusDiv = document.getElementById('statusConexaoModal');
-        if (statusDiv) {
-            statusDiv.className = `mb-4 p-3 rounded ${tipo === 'sucesso' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`;
-            statusDiv.innerHTML = msg;
-            statusDiv.classList.remove('hidden');
-            setTimeout(() => statusDiv.classList.add('hidden'), 3000);
-        }
-    }
-
     // LOGIN
     function fazerLogin() {
         const email = document.getElementById('loginEmail').value;
         const senha = document.getElementById('loginSenha').value;
         const btn = document.getElementById('btnLogin');
-        const msg = document.getElementById('loginMessage');
-
-        if (!email || !senha) {
-            mostrarMensagemLogin('Preencha e-mail e senha!', 'erro');
-            return;
-        }
 
         btn.innerHTML = '<span class="loading-spinner mr-2"></span> ENTRANDO...';
         btn.disabled = true;
@@ -555,21 +402,8 @@
             .catch((error) => {
                 btn.innerHTML = 'ENTRAR NO PAINEL GESTOR';
                 btn.disabled = false;
-                
-                let erroMsg = 'Erro ao fazer login!';
-                if (error.code === 'auth/user-not-found') erroMsg = 'Usuário não encontrado!';
-                if (error.code === 'auth/wrong-password') erroMsg = 'Senha incorreta!';
-                if (error.code === 'auth/invalid-email') erroMsg = 'E-mail inválido!';
-                
-                mostrarMensagemLogin(erroMsg, 'erro');
+                alert('Erro: ' + error.message);
             });
-    }
-
-    function mostrarMensagemLogin(texto, tipo) {
-        const msg = document.getElementById('loginMessage');
-        msg.className = `mb-4 p-3 rounded ${tipo === 'erro' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`;
-        msg.innerHTML = texto;
-        msg.classList.remove('hidden');
     }
 
     function fazerLogout() {
@@ -578,8 +412,6 @@
 
     // CARREGAR CONSULTORES
     function carregarConsultores() {
-        document.getElementById('loadingConsultores').style.display = 'block';
-        
         database.ref('consultores').once('value')
             .then((snapshot) => {
                 const consultores = snapshot.val();
@@ -587,11 +419,9 @@
                 
                 if (consultores) {
                     Object.keys(consultores).forEach((key) => {
-                        const consultor = consultores[key];
                         todosConsultores.push({
                             id: key,
-                            nome: consultor.consultor || key.replace(/_/g, ' '),
-                            ...consultor
+                            ...consultores[key]
                         });
                     });
                 }
@@ -599,664 +429,571 @@
                 document.getElementById('totalConsultores').innerText = todosConsultores.length;
                 document.getElementById('loadingConsultores').style.display = 'none';
                 filtrarConsultores();
-            })
-            .catch((error) => {
-                console.error('Erro:', error);
-                document.getElementById('loadingConsultores').style.display = 'none';
+                carregarRegionais();
             });
     }
 
     function carregarRegionais() {
-        database.ref('consultores').once('value')
-            .then((snapshot) => {
-                const regionais = new Set();
-                const consultores = snapshot.val();
-                
-                if (consultores) {
-                    Object.values(consultores).forEach((c) => {
-                        if (c.regional) regionais.add(c.regional);
-                    });
-                }
-                
-                const select = document.getElementById('filtroRegional');
-                regionais.forEach((r) => {
-                    if (r) {
-                        const option = document.createElement('option');
-                        option.value = r;
-                        option.textContent = r;
-                        select.appendChild(option);
-                    }
-                });
-            });
+        const regionais = [...new Set(todosConsultores.map(c => c.regional).filter(Boolean))];
+        const select = document.getElementById('filtroRegional');
+        regionais.forEach(r => {
+            const option = document.createElement('option');
+            option.value = r;
+            option.textContent = r;
+            select.appendChild(option);
+        });
     }
 
     function filtrarConsultores() {
         const nomeFiltro = document.getElementById('filtroNome').value.toLowerCase();
         const regionalFiltro = document.getElementById('filtroRegional').value;
-        const ordem = document.getElementById('filtroOrdem').value;
         
-        consultoresFiltrados = todosConsultores.filter((c) => {
-            const matchNome = (c.nome || '').toLowerCase().includes(nomeFiltro) || 
-                            (c.cidade || '').toLowerCase().includes(nomeFiltro);
-            const matchRegional = !regionalFiltro || c.regional === regionalFiltro;
-            return matchNome && matchRegional;
-        });
+        let filtrados = todosConsultores.filter(c => 
+            (c.consultor || '').toLowerCase().includes(nomeFiltro) &&
+            (!regionalFiltro || c.regional === regionalFiltro)
+        );
         
-        if (ordem === 'nome') {
-            consultoresFiltrados.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
-        } else if (ordem === 'data') {
-            consultoresFiltrados.sort((a, b) => {
-                return (b.metadata?.ultimaAtualizacao || '').localeCompare(a.metadata?.ultimaAtualizacao || '');
-            });
-        } else if (ordem === 'checklists') {
-            consultoresFiltrados.sort((a, b) => {
-                const countA = a.visitas ? a.visitas.length : 0;
-                const countB = b.visitas ? b.visitas.length : 0;
-                return countB - countA;
-            });
-        }
-        
-        renderizarConsultores();
+        renderizarConsultores(filtrados);
     }
 
-    function renderizarConsultores() {
+    function renderizarConsultores(consultores) {
         const container = document.getElementById('listaConsultores');
-        const loading = document.getElementById('loadingConsultores');
-        const semResultados = document.getElementById('semResultados');
         
-        loading.style.display = 'none';
-        
-        if (consultoresFiltrados.length === 0) {
-            semResultados.classList.remove('hidden');
-            container.innerHTML = '';
-            return;
-        }
-        
-        semResultados.classList.add('hidden');
-        
-        let html = '';
-        consultoresFiltrados.forEach((c) => {
-            const ultimaAtualizacao = c.metadata?.ultimaAtualizacao ? 
-                new Date(c.metadata.ultimaAtualizacao).toLocaleDateString('pt-BR') : 'Nunca';
-            
-            const visitasCount = c.visitas ? c.visitas.length : 0;
-            const mediaIDC = calcularMediaIDC(c);
-            
-            html += `
-                <div class="card-consultor p-6 cursor-pointer" onclick="abrirChecklist('${c.id}')">
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <h3 class="text-xl font-bold text-[#1e3c72]">${c.consultor || c.nome}</h3>
-                            <p class="text-sm text-gray-600">${c.cidade || 'Cidade não informada'} ${c.uf ? '-' + c.uf : ''}</p>
-                        </div>
-                        <span class="badge-status ${visitasCount > 0 ? 'badge-online' : 'badge-offline'}">
-                            ${visitasCount} visitas
-                        </span>
-                    </div>
-                    
-                    <div class="space-y-2 text-sm">
-                        <div><span class="font-medium">Regional:</span> ${c.regional || 'Não informada'}</div>
-                        <div><span class="font-medium">Supervisor:</span> ${c.supervisor || '-'}</div>
-                        <div><span class="font-medium">Última atualização:</span> ${ultimaAtualizacao}</div>
-                        <div><span class="font-medium">Média IDC:</span> ${mediaIDC}</div>
-                    </div>
-                    
-                    <div class="mt-4 pt-4 border-t border-gray-200 flex justify-between text-xs text-gray-500">
-                        <span><i class="far fa-calendar mr-1"></i> Admissão: ${c.dataAdmissao ? new Date(c.dataAdmissao).toLocaleDateString('pt-BR') : '-'}</span>
-                        <span><i class="fas fa-store mr-1"></i> ${c.loja?.revenda || 'Sem loja'}</span>
-                    </div>
+        container.innerHTML = consultores.map(c => `
+            <div class="card-consultor p-4" onclick="abrirChecklist('${c.id}')">
+                <div class="font-bold text-lg text-[#1e3c72]">${c.consultor || 'Sem nome'}</div>
+                <div class="text-sm text-gray-600">${c.cidade || ''} ${c.uf || ''}</div>
+                <div class="text-sm mt-2">Regional: ${c.regional || '-'}</div>
+                <div class="text-sm">Supervisor: ${c.supervisor || '-'}</div>
+                <div class="text-xs text-gray-500 mt-2">
+                    Visitas: ${c.visitas?.length || 0} | 
+                    IDC: ${calcularMediaIDC(c)}
                 </div>
-            `;
-        });
-        
-        container.innerHTML = html;
+            </div>
+        `).join('');
     }
 
     function calcularMediaIDC(consultor) {
         if (!consultor.idc) return '-';
-        
-        let soma = 0;
-        let count = 0;
-        const meses = ['janeiro', 'fevereiro', 'marco', 'abril', 'maio', 'junho', 
-                      'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-        
-        meses.forEach((mes) => {
-            if (consultor.idc[mes] && consultor.idc[mes].nota) {
-                const nota = parseFloat(consultor.idc[mes].nota);
-                if (!isNaN(nota)) {
-                    soma += nota;
-                    count++;
-                }
+        let soma = 0, count = 0;
+        const meses = ['janeiro','fevereiro','marco','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+        meses.forEach(mes => {
+            if (consultor.idc[mes]?.nota) {
+                soma += parseFloat(consultor.idc[mes].nota) || 0;
+                count++;
             }
         });
-        
         return count > 0 ? (soma / count).toFixed(1) : '-';
     }
 
     // ABRIR CHECKLIST
-    function abrirChecklist(consultorId) {
-        consultorSelecionado = consultorId;
-        
-        database.ref('consultores/' + consultorId).once('value')
+    function abrirChecklist(id) {
+        consultorSelecionado = id;
+        database.ref('consultores/' + id).once('value')
             .then((snapshot) => {
-                dadosConsultorSelecionado = snapshot.val();
-                if (!dadosConsultorSelecionado) return;
+                const dados = snapshot.val();
+                if (!dados) return;
                 
-                document.getElementById('modalTitulo').innerHTML = `<i class="fas fa-user mr-2"></i>${dadosConsultorSelecionado.consultor || consultorId}`;
-                document.getElementById('modalSubtitulo').innerHTML = `${dadosConsultorSelecionado.cidade || ''} - Regional: ${dadosConsultorSelecionado.regional || ''}`;
+                document.getElementById('modalTitulo').innerHTML = dados.consultor || id;
+                document.getElementById('modalSubtitulo').innerHTML = `${dados.cidade || ''} - ${dados.regional || ''}`;
                 
+                renderizarChecklist(dados);
                 document.getElementById('modalChecklist').classList.add('active');
-                
-                renderizarChecklistCompleto(dadosConsultorSelecionado);
-                gerarCalendario(dadosConsultorSelecionado);
-                renderizarVerso(dadosConsultorSelecionado);
-                
-                mostrarStatus('✅ Dados carregados com sucesso!', 'sucesso');
-            })
-            .catch((error) => {
-                alert('Erro ao carregar dados: ' + error.message);
             });
     }
 
-    // RENDERIZAR CHECKLIST
-    function renderizarChecklistCompleto(consultor) {
+    // RENDERIZAR CHECKLIST IGUAL AO ORIGINAL
+    function renderizarChecklist(dados) {
         const content = document.getElementById('checklistContent');
         
         let html = `
             <div class="excel-container">
-                <div class="section-header">CHECK LIST - 2026 | PANASONIC</div>
+                <div class="section-title">CHECK LIST - 2026 | PANASONIC</div>
                 
                 <table class="excel-table">
-                    <tr><td colspan="8" class="section-title">INFORMAÇÕES DO CONSULTOR</td></tr>
+                    <!-- INFORMAÇÕES CONSULTOR -->
+                    <tr><td colspan="8" class="subsection-title">INFORMAÇÕES DO CONSULTOR</td></tr>
                     <tr>
                         <td colspan="2"><strong>CONSULTOR(A):</strong></td>
-                        <td colspan="3">${consultor.consultor || ''}</td>
+                        <td colspan="3">${dados.consultor || ''}</td>
                         <td><strong>REGIONAL:</strong></td>
-                        <td colspan="2">${consultor.regional || ''}</td>
+                        <td colspan="2">${dados.regional || ''}</td>
                     </tr>
                     <tr>
                         <td colspan="2"><strong>DATA DE ADMISSÃO:</strong></td>
-                        <td colspan="3">${consultor.dataAdmissao ? new Date(consultor.dataAdmissao).toLocaleDateString('pt-BR') : ''}</td>
-                        <td></td>
-                        <td colspan="2"></td>
+                        <td colspan="3">${dados.dataAdmissao ? new Date(dados.dataAdmissao).toLocaleDateString('pt-BR') : ''}</td>
+                        <td colspan="3"></td>
                     </tr>
                     <tr>
                         <td colspan="2"><strong>CIDADE:</strong></td>
-                        <td colspan="3">${consultor.cidade || ''}</td>
+                        <td colspan="3">${dados.cidade || ''}</td>
                         <td><strong>UF:</strong></td>
-                        <td colspan="2">${consultor.uf || ''}</td>
+                        <td colspan="2">${dados.uf || ''}</td>
                     </tr>
                     <tr>
                         <td colspan="2"><strong>SUPERVISOR(A):</strong></td>
-                        <td colspan="6">${consultor.supervisor || ''}</td>
+                        <td colspan="6">${dados.supervisor || ''}</td>
                     </tr>
                     <tr>
                         <td colspan="2"><strong>COORDENADOR(A):</strong></td>
-                        <td colspan="6">${consultor.coordenador || ''}</td>
+                        <td colspan="6">${dados.coordenador || ''}</td>
                     </tr>
-                    
-                    <tr><td colspan="8" class="section-title">CERTIFICAÇÃO</td></tr>
+
+                    <!-- CERTIFICAÇÃO -->
+                    <tr><td colspan="8" class="subsection-title">CERTIFICAÇÃO</td></tr>
                     <tr>
                         <td colspan="4"><strong>DATA DA ÚLTIMA CERTIFICAÇÃO:</strong></td>
-                        <td colspan="4">${consultor.dataCertificacao ? new Date(consultor.dataCertificacao).toLocaleDateString('pt-BR') : ''}</td>
+                        <td colspan="4">${dados.dataCertificacao ? new Date(dados.dataCertificacao).toLocaleDateString('pt-BR') : ''}</td>
                     </tr>
                     <tr>
                         <td colspan="4"><strong>NOTA DA CERTIFICAÇÃO:</strong></td>
-                        <td colspan="4">${consultor.notaCertificacao || ''}</td>
+                        <td colspan="4">${dados.notaCertificacao || ''}</td>
                     </tr>
-                    
-                    <tr><td colspan="8" class="section-title">IDC - ÍNDICE DE DESEMPENHO DO CONSULTOR</td></tr>
+
+                    <!-- IDC -->
+                    <tr><td colspan="8" class="subsection-title">IDC - ÍNDICE DE DESEMPENHO DO CONSULTOR</td></tr>
                     <tr>
-                        <th>MÊS</th>
-                        <th colspan="2">NOTA</th>
-                        <th colspan="5">APONTAMENTOS</th>
+                        <th style="width:15%">MÊS</th>
+                        <th colspan="2" style="width:10%">NOTA</th>
+                        <th colspan="5" style="width:75%">APONTAMENTOS / OBSERVAÇÕES</th>
                     </tr>
-                    ${gerarLinhasIDC(consultor.idc)}
-                    
-                    <tr><td colspan="8" class="section-title">ANOTAÇÕES GERAIS</td></tr>
-                    <tr><td colspan="8">${consultor.anotacoesGerais || ''}</td></tr>
         `;
 
-        if (consultor.loja) {
+        const meses = ['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO'];
+        const campos = ['janeiro','fevereiro','marco','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+        
+        for (let i = 0; i < meses.length; i++) {
+            const dadosMes = dados.idc?.[campos[i]] || {};
             html += `
-                    <tr><td colspan="8" class="section-title">INFORMAÇÕES DA LOJA</td></tr>
-                    <tr>
-                        <td colspan="2"><strong>REVENDA:</strong></td>
-                        <td colspan="2">${consultor.loja.revenda || ''}</td>
-                        <td><strong>FILIAL:</strong></td>
-                        <td colspan="3">${consultor.loja.filial || ''}</td>
-                    </tr>
-                    <tr>
-                        <td colspan="2"><strong>ENDEREÇO:</strong></td>
-                        <td colspan="6">${consultor.loja.endereco || ''}</td>
-                    </tr>
-                    <tr>
-                        <td colspan="2"><strong>GERENTE:</strong></td>
-                        <td colspan="2">${consultor.loja.gerente || ''}</td>
-                        <td><strong>CONTATO:</strong></td>
-                        <td colspan="3">${consultor.loja.contato || ''}</td>
-                    </tr>
+                <tr>
+                    <td>${meses[i]}</td>
+                    <td colspan="2">${dadosMes.nota || ''}</td>
+                    <td colspan="5">${dadosMes.apontamento || ''}</td>
+                </tr>
             `;
         }
 
-        html += `</table></div>`;
+        html += `
+            <tr><td colspan="8" class="subsection-title">ANOTAÇÕES GERAIS</td></tr>
+            <tr><td colspan="8">${dados.anotacoesGerais || ''}</td></tr>
+        `;
+
+        // FRENTE - INFORMAÇÕES DA LOJA
+        if (dados.loja) {
+            html += `
+                <tr><td colspan="13" class="subsection-title" style="background-color:#4472c4;">INFORMAÇÕES DA LOJA</td></tr>
+                <tr>
+                    <td colspan="2"><strong>REVENDA:</strong></td>
+                    <td colspan="3">${dados.loja.revenda || ''}</td>
+                    <td colspan="2"><strong>FILIAL:</strong></td>
+                    <td colspan="3">${dados.loja.filial || ''}</td>
+                    <td><strong>ID:</strong></td>
+                    <td>${dados.loja.id || ''}</td>
+                </tr>
+                <tr>
+                    <td colspan="2"><strong>ENDEREÇO:</strong></td>
+                    <td colspan="6">${dados.loja.endereco || ''}</td>
+                    <td colspan="2"><strong>CIDADE/UF:</strong></td>
+                    <td colspan="3">${dados.loja.cidadeUf || ''}</td>
+                </tr>
+                <tr>
+                    <td colspan="2"><strong>GERENTE:</strong></td>
+                    <td colspan="2">${dados.loja.gerente || ''}</td>
+                    <td colspan="2"><strong>CONTATO:</strong></td>
+                    <td colspan="2">${dados.loja.contato || ''}</td>
+                    <td colspan="2"><strong>SUB GERENTE:</strong></td>
+                    <td colspan="3">${dados.loja.subGerente || ''}</td>
+                </tr>
+                <tr>
+                    <td colspan="2"><strong>CNPJ:</strong></td>
+                    <td colspan="11">${dados.loja.cnpj || ''}</td>
+                </tr>
+
+                <tr><td colspan="13" class="subsection-title">FATURAMENTO DA LOJA</td></tr>
+                <tr>
+                    <td colspan="4"><strong>FATURAMENTO MENSAL LOJA R$:</strong></td>
+                    <td colspan="3">${dados.loja.faturamentoLoja || ''}</td>
+                    <td colspan="3"><strong>FATURAMENTO PANASONIC R$:</strong></td>
+                    <td colspan="3">${dados.loja.faturamentoPanasonic || ''}</td>
+                </tr>
+                <tr>
+                    <td colspan="4"><strong>RANKING NA REDE:</strong></td>
+                    <td colspan="9">${dados.loja.ranking || ''}</td>
+                </tr>
+                <tr>
+                    <td colspan="4"><strong>JUSTIFICATIVA:</strong></td>
+                    <td colspan="9">${dados.loja.justificativa || ''}</td>
+                </tr>
+                <tr>
+                    <td colspan="4"><strong>FLOOR SHARE PANASONIC %:</strong></td>
+                    <td colspan="9">${dados.loja.floorShare || ''}</td>
+                </tr>
+            `;
+        }
+
+        // DESTAQUE DE VENDAS
+        if (dados.destaques) {
+            html += `
+                <tr><td colspan="13" class="subsection-title">DESTAQUE DE VENDAS - LINHA BRANCA</td></tr>
+                <tr>
+                    <th colspan="4">GELADEIRA</th>
+                    <th colspan="4">MÁQUINA DE LAVAR</th>
+                    <th colspan="5">MICRO-ONDAS</th>
+                </tr>
+                <tr>
+                    <td><strong>MARCA</strong></td><td><strong>MODELO</strong></td><td colspan="2"><strong>PREÇO</strong></td>
+                    <td><strong>MARCA</strong></td><td><strong>MODELO</strong></td><td colspan="2"><strong>PREÇO</strong></td>
+                    <td><strong>MARCA</strong></td><td><strong>MODELO</strong></td><td colspan="3"><strong>PREÇO</strong></td>
+                </tr>
+                <tr>
+                    <td>${dados.destaques.geladeira?.marca || ''}</td>
+                    <td>${dados.destaques.geladeira?.modelo || ''}</td>
+                    <td colspan="2">R$ ${dados.destaques.geladeira?.preco || ''}</td>
+                    <td>${dados.destaques.lavadora?.marca || ''}</td>
+                    <td>${dados.destaques.lavadora?.modelo || ''}</td>
+                    <td colspan="2">R$ ${dados.destaques.lavadora?.preco || ''}</td>
+                    <td>${dados.destaques.microondas?.marca || ''}</td>
+                    <td>${dados.destaques.microondas?.modelo || ''}</td>
+                    <td colspan="3">R$ ${dados.destaques.microondas?.preco || ''}</td>
+                </tr>
+                <tr><td colspan="13">OUTROS DESTAQUES: ${dados.destaques.outros || ''}</td></tr>
+            `;
+        }
+
+        // PROGRAMAS E CAMPANHAS
+        if (dados.programas) {
+            html += `
+                <tr><td colspan="13" style="background-color:#d9e1f2;"><strong>PANASONIC - PROGRAMA E CAMPANHAS</strong></td></tr>
+                <tr><td colspan="13">
+                    <div style="display:flex; gap:20px;">
+                        <span><strong>Conhecem Programa:</strong> ${dados.programas.conhecemPrograma || ''}</span>
+                        <span><strong>Cadastrados:</strong> ${dados.programas.cadastrados || ''}</span>
+                        <span><strong>Pendência:</strong> ${dados.programas.pendencia || ''}</span>
+                    </div>
+                </td></tr>
+                <tr><td colspan="2"><strong>OBS:</strong></td><td colspan="11">${dados.programas.obsCadastro || ''}</td></tr>
+            `;
+        }
+
+        // LANÇAMENTOS
+        if (dados.lancamentos?.length > 0) {
+            html += `
+                <tr><td colspan="13" class="subsection-title">LANÇAMENTO - INTRODUÇÃO DE PRODUTO NA LOJA</td></tr>
+                <tr>
+                    <th style="width:10%">DATA</th>
+                    <th style="width:10%">MARCA</th>
+                    <th colspan="2" style="width:20%">PRODUTO</th>
+                    <th colspan="3" style="width:25%">MODELO</th>
+                    <th colspan="6" style="width:35%">PREÇO</th>
+                </tr>
+            `;
+            dados.lancamentos.forEach(l => {
+                html += `
+                    <tr>
+                        <td>${l.data || ''}</td>
+                        <td>${l.marca || ''}</td>
+                        <td colspan="2">${l.produto || ''}</td>
+                        <td colspan="3">${l.modelo || ''}</td>
+                        <td colspan="6">R$ ${l.preco || ''}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // METAS
+        if (dados.metas) {
+            html += `
+                <tr><td colspan="13" class="subsection-title">META DE TREINAMENTO ON THE JOB</td></tr>
+                <tr>
+                    <td colspan="4"><strong>META DE TREINAMENTO:</strong></td>
+                    <td colspan="9">${dados.metas.metaTreinamento || ''}</td>
+                </tr>
+                <tr>
+                    <td colspan="4"><strong>META DE PESSOAS TREINADAS:</strong></td>
+                    <td colspan="9">${dados.metas.metaPessoas || ''}</td>
+                </tr>
+            `;
+        }
+
+        // MERCHANDISING
+        if (dados.merchandising) {
+            html += `
+                <tr><td colspan="13" class="subsection-title">GUIA DE MERCHANDISING - MPV</td></tr>
+                <tr><td colspan="13">
+                    <div style="display:flex; gap:20px; flex-wrap:wrap;">
+                        <span><strong>MPV Aplicado:</strong> ${dados.merchandising.mpvAplicado || ''}</span>
+                        <span><strong>Motivo:</strong> ${dados.merchandising.motivoMpv || ''}</span>
+                    </div>
+                </td></tr>
+                <tr><td colspan="13">
+                    <div style="display:flex; gap:20px; flex-wrap:wrap;">
+                        <span><strong>Produtos Limpos:</strong> ${dados.merchandising.produtosLimpos || ''}</span>
+                        <span><strong>Motivo:</strong> ${dados.merchandising.motivoLimpeza || ''}</span>
+                    </div>
+                </td></tr>
+            `;
+        }
+
+        // VERSO - VISITAS
+        if (dados.visitas?.length > 0) {
+            html += `
+                <tr><td colspan="13" class="section-title">VERSO CHECK LIST - VISITAS RECEBIDAS</td></tr>
+                <tr><td colspan="13" class="subsection-title">VISITAS RECEBIDAS</td></tr>
+                <tr>
+                    <th>DATA</th>
+                    <th>NOME</th>
+                    <th>VISTO</th>
+                    <th>FERRAMENTA</th>
+                    <th>DOMÍNIO</th>
+                    <th>UNIFORME</th>
+                    <th>PDV</th>
+                    <th colspan="6">OBSERVAÇÃO</th>
+                </tr>
+            `;
+            dados.visitas.forEach(v => {
+                html += `
+                    <tr>
+                        <td>${v.data || ''}</td>
+                        <td>${v.nome || ''}</td>
+                        <td>${v.visto || ''}</td>
+                        <td>${v.ferramenta || ''}</td>
+                        <td>${v.dominio || ''}</td>
+                        <td>${v.uniforme || ''}</td>
+                        <td>${v.pdv || ''}</td>
+                        <td colspan="6">${v.observacao || ''}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        html += '</table></div>';
         content.innerHTML = html;
     }
 
-    function gerarLinhasIDC(idc) {
-        if (!idc) return '<tr><td colspan="8">Sem dados de IDC</td></tr>';
-        
-        const meses = [
-            'JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO',
-            'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'
-        ];
-        const campos = ['janeiro', 'fevereiro', 'marco', 'abril', 'maio', 'junho', 
-                       'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-        
-        let html = '';
-        for (let i = 0; i < meses.length; i++) {
-            const dados = idc[campos[i]] || {};
-            html += `<tr>
-                <td>${meses[i]}</td>
-                <td colspan="2">${dados.nota || ''}</td>
-                <td colspan="5">${dados.apontamento || ''}</td>
-            </tr>`;
-        }
-        return html;
-    }
-
-    function renderizarVerso(consultor) {
-        const versoContent = document.getElementById('versoContent');
-        
-        if (!consultor.visitas || consultor.visitas.length === 0) {
-            versoContent.innerHTML = '<p class="text-center py-8 text-gray-500">Nenhuma visita registrada</p>';
-            return;
-        }
-        
-        let html = `
-            <div class="excel-container">
-                <table class="excel-table">
-                    <tr><td colspan="8" class="section-title">VISITAS RECEBIDAS</td></tr>
-                    <tr>
-                        <th>DATA</th>
-                        <th>NOME</th>
-                        <th>VISTO</th>
-                        <th>FERRAMENTA</th>
-                        <th>DOMÍNIO</th>
-                        <th>UNIFORME</th>
-                        <th>PDV</th>
-                        <th>OBSERVAÇÃO</th>
-                    </tr>
-        `;
-        
-        consultor.visitas.forEach(v => {
-            html += `
-                <tr>
-                    <td>${v.data || ''}</td>
-                    <td>${v.nome || ''}</td>
-                    <td>${v.visto || ''}</td>
-                    <td>${formatarFerramenta(v.ferramenta)}</td>
-                    <td>${formatarDominio(v.dominio)}</td>
-                    <td>${formatarUniforme(v.uniforme)}</td>
-                    <td>${formatarPDV(v.pdv)}</td>
-                    <td>${v.observacao || ''}</td>
-                </tr>
-            `;
-        });
-        
-        html += '</table></div>';
-        versoContent.innerHTML = html;
-    }
-
-    function formatarFerramenta(valor) {
-        const mapa = {
-            'CELULAR_BOM': '📱 CELULAR BOM ESTADO',
-            'CELULAR_DEFEITO': '📱 CELULAR COM DEFEITO'
-        };
-        return mapa[valor] || valor || '';
-    }
-
-    function formatarDominio(valor) {
-        const mapa = {
-            'FOCO_MENSAL': '🎯 FOCO MENSAL',
-            'CAMPANHAS': '📢 CAMPANHAS VIGENTES',
-            'INFO_LOJA': '🏪 INFORMAÇÕES LOJA'
-        };
-        return mapa[valor] || valor || '';
-    }
-
-    function formatarUniforme(valor) {
-        const mapa = {
-            'COMPLETO': '👔 COMPLETO BOM ESTADO',
-            'INCOMPLETO': '👕 INCOMPLETO'
-        };
-        return mapa[valor] || valor || '';
-    }
-
-    function formatarPDV(valor) {
-        const mapa = {
-            'POSITIVACAO': '📦 POSITIVAÇÃO',
-            'LIMPEZA': '🧹 LIMPEZA/ORGANIZAÇÃO',
-            'PRECIFICACAO': '🏷️ PRECIFICAÇÃO'
-        };
-        return mapa[valor] || valor || '';
-    }
-
-    // CALENDÁRIO
-    function gerarCalendario(consultor) {
-        const calendario = document.getElementById('calendario');
-        const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-        
-        let html = '';
-        diasSemana.forEach(dia => {
-            html += `<div class="text-center font-bold py-2 bg-gray-100">${dia}</div>`;
-        });
-        
-        const ano = mesCalendario.getFullYear();
-        const mes = mesCalendario.getMonth();
-        const primeiroDia = new Date(ano, mes, 1);
-        const ultimoDia = new Date(ano, mes + 1, 0);
-        
-        for (let i = 0; i < primeiroDia.getDay(); i++) {
-            html += `<div class="calendar-day bg-gray-50"></div>`;
-        }
-        
-        for (let dia = 1; dia <= ultimoDia.getDate(); dia++) {
-            const dataStr = `${ano}-${String(mes+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
-            const temVisita = consultor.visitas?.some(v => v.data === dataStr);
-            
-            html += `
-                <div class="calendar-day ${temVisita ? 'has-checklist' : ''}">
-                    <div class="day-number">${dia}</div>
-                    ${temVisita ? '<span class="checklist-indicator">📋 Visita</span>' : ''}
-                </div>
-            `;
-        }
-        
-        calendario.innerHTML = html;
-        document.getElementById('mesAtual').innerText = 
-            mesCalendario.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-    }
-
-    // EXPORTAR EXCEL COM ESTILOS (xlsx-js-style)
+    // EXPORTAR EXCEL
     function exportarChecklistAtual() {
-        if (!dadosConsultorSelecionado) return;
+        if (!consultorSelecionado) return;
         
-        try {
-            // Criar workbook
-            const wb = XLSX.utils.book_new();
-            
-            // ===== FOLHA 1: FRENTE DO CHECKLIST =====
-            const dadosFrente = [];
-            
-            // TÍTULO
-            dadosFrente.push(['CHECK LIST 2026 - PANASONIC', '', '', '', '', '', '', '']);
-            dadosFrente.push([]);
-            
-            // INFORMAÇÕES DO CONSULTOR
-            dadosFrente.push(['INFORMAÇÕES DO CONSULTOR', '', '', '', '', '', '', '']);
-            dadosFrente.push(['CONSULTOR(A):', dadosConsultorSelecionado.consultor || '', 'REGIONAL:', dadosConsultorSelecionado.regional || '', '', '', '', '']);
-            dadosFrente.push(['DATA DE ADMISSÃO:', dadosConsultorSelecionado.dataAdmissao || '', 'CIDADE:', dadosConsultorSelecionado.cidade || '', 'UF:', dadosConsultorSelecionado.uf || '', '', '']);
-            dadosFrente.push(['SUPERVISOR(A):', dadosConsultorSelecionado.supervisor || '', '', '', 'COORDENADOR(A):', dadosConsultorSelecionado.coordenador || '', '', '']);
-            dadosFrente.push([]);
-            
-            // CERTIFICAÇÃO
-            dadosFrente.push(['CERTIFICAÇÃO', '', '', '', '', '', '', '']);
-            dadosFrente.push(['DATA DA ÚLTIMA CERTIFICAÇÃO:', dadosConsultorSelecionado.dataCertificacao || '', 'NOTA DA CERTIFICAÇÃO:', dadosConsultorSelecionado.notaCertificacao || '', '', '', '', '']);
-            dadosFrente.push([]);
-            
-            // IDC
-            dadosFrente.push(['IDC - ÍNDICE DE DESEMPENHO DO CONSULTOR', '', '', '', '', '', '', '']);
-            dadosFrente.push(['MÊS', 'NOTA', 'APONTAMENTOS / OBSERVAÇÕES', '', '', '', '', '']);
-            
-            const meses = ['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO',
-                          'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'];
-            const campos = ['janeiro', 'fevereiro', 'marco', 'abril', 'maio', 'junho', 
-                           'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-            
-            for (let i = 0; i < meses.length; i++) {
-                const dadosMes = dadosConsultorSelecionado.idc ? dadosConsultorSelecionado.idc[campos[i]] || {} : {};
-                dadosFrente.push([meses[i], dadosMes.nota || '', dadosMes.apontamento || '', '', '', '', '', '']);
-            }
-            
-            dadosFrente.push([]);
-            
-            // ANOTAÇÕES GERAIS
-            dadosFrente.push(['ANOTAÇÕES GERAIS', '', '', '', '', '', '', '']);
-            dadosFrente.push([dadosConsultorSelecionado.anotacoesGerais || '', '', '', '', '', '', '', '']);
-            dadosFrente.push([]);
-            
-            // DADOS DA LOJA
-            if (dadosConsultorSelecionado.loja) {
-                dadosFrente.push(['INFORMAÇÕES DA LOJA', '', '', '', '', '', '', '']);
-                dadosFrente.push(['REVENDA:', dadosConsultorSelecionado.loja.revenda || '', 'FILIAL:', dadosConsultorSelecionado.loja.filial || '', 'ID:', dadosConsultorSelecionado.loja.id || '', '', '']);
-                dadosFrente.push(['ENDEREÇO:', dadosConsultorSelecionado.loja.endereco || '', '', '', '', '', '', '']);
-                dadosFrente.push(['GERENTE:', dadosConsultorSelecionado.loja.gerente || '', 'CONTATO:', dadosConsultorSelecionado.loja.contato || '', 'SUB GERENTE:', dadosConsultorSelecionado.loja.subGerente || '', '', '']);
-                dadosFrente.push(['CNPJ:', dadosConsultorSelecionado.loja.cnpj || '', '', '', '', '', '', '']);
-                dadosFrente.push([]);
+        database.ref('consultores/' + consultorSelecionado).once('value')
+            .then((snapshot) => {
+                const dados = snapshot.val();
+                if (!dados) return;
                 
-                // FATURAMENTO
-                dadosFrente.push(['FATURAMENTO DA LOJA', '', '', '', '', '', '', '']);
-                dadosFrente.push(['FATURAMENTO MENSAL LOJA R$:', dadosConsultorSelecionado.loja.faturamentoLoja || '', 'FATURAMENTO PANASONIC R$:', dadosConsultorSelecionado.loja.faturamentoPanasonic || '', '', '', '', '']);
-                dadosFrente.push(['RANKING NA REDE:', dadosConsultorSelecionado.loja.ranking || '', 'JUSTIFICATIVA:', dadosConsultorSelecionado.loja.justificativa || '', 'FLOOR SHARE %:', dadosConsultorSelecionado.loja.floorShare || '', '', '']);
-            }
-            
-            // Criar worksheet
-            const wsFrente = XLSX.utils.aoa_to_sheet(dadosFrente);
-            
-            // APLICAR ESTILOS
-            const range = XLSX.utils.decode_range(wsFrente['!ref']);
-            
-            for (let R = range.s.r; R <= range.e.r; R++) {
-                for (let C = range.s.c; C <= range.e.c; C++) {
-                    const cellRef = XLSX.utils.encode_cell({r: R, c: C});
-                    if (!wsFrente[cellRef]) continue;
-                    
-                    // Inicializar s se não existir
-                    if (!wsFrente[cellRef].s) wsFrente[cellRef].s = {};
-                    
-                    // Bordas em todas as células
-                    wsFrente[cellRef].s = {
-                        border: {
-                            top: {style: 'thin', color: {rgb: '000000'}},
-                            bottom: {style: 'thin', color: {rgb: '000000'}},
-                            left: {style: 'thin', color: {rgb: '000000'}},
-                            right: {style: 'thin', color: {rgb: '000000'}}
-                        },
-                        font: { name: 'Arial', sz: 11 }
-                    };
-                    
-                    // Títulos em azul escuro
-                    if (R === 0) {
-                        wsFrente[cellRef].s.fill = { fgColor: { rgb: '1e3c72' } };
-                        wsFrente[cellRef].s.font = { color: { rgb: 'FFFFFF' }, bold: true, sz: 14 };
-                        wsFrente[cellRef].s.alignment = { horizontal: 'center' };
-                    }
-                    
-                    // Seções
-                    if (dadosFrente[R] && dadosFrente[R][0] && 
-                        (dadosFrente[R][0].includes('INFORMAÇÕES') || 
-                         dadosFrente[R][0].includes('CERTIFICAÇÃO') ||
-                         dadosFrente[R][0].includes('IDC') ||
-                         dadosFrente[R][0].includes('ANOTAÇÕES') ||
-                         dadosFrente[R][0].includes('LOJA') ||
-                         dadosFrente[R][0].includes('FATURAMENTO'))) {
-                        wsFrente[cellRef].s.fill = { fgColor: { rgb: '4472c4' } };
-                        wsFrente[cellRef].s.font = { color: { rgb: 'FFFFFF' }, bold: true, sz: 12 };
-                    }
-                    
-                    // Cabeçalho do IDC
-                    if (R === 9 && C === 0) {
-                        wsFrente[cellRef].s.fill = { fgColor: { rgb: '1e3c72' } };
-                        wsFrente[cellRef].s.font = { color: { rgb: 'FFFFFF' }, bold: true };
-                    }
+                const wb = XLSX.utils.book_new();
+                const planilha = [];
+                
+                // TÍTULO
+                planilha.push(['CHECK LIST 2026 - PANASONIC', '', '', '', '', '', '', '', '', '', '', '', '']);
+                planilha.push([]);
+                
+                // INFORMAÇÕES CONSULTOR
+                planilha.push(['INFORMAÇÕES DO CONSULTOR', '', '', '', '', '', '', '', '', '', '', '', '']);
+                planilha.push(['CONSULTOR(A):', dados.consultor || '', 'REGIONAL:', dados.regional || '', '', '', '', '', '', '', '', '', '']);
+                planilha.push(['DATA DE ADMISSÃO:', dados.dataAdmissao || '', 'CIDADE:', dados.cidade || '', 'UF:', dados.uf || '', '', '', '', '', '', '', '']);
+                planilha.push(['SUPERVISOR(A):', dados.supervisor || '', '', '', 'COORDENADOR(A):', dados.coordenador || '', '', '', '', '', '', '', '']);
+                planilha.push([]);
+                
+                // CERTIFICAÇÃO
+                planilha.push(['CERTIFICAÇÃO', '', '', '', '', '', '', '', '', '', '', '', '']);
+                planilha.push(['DATA DA ÚLTIMA CERTIFICAÇÃO:', dados.dataCertificacao || '', 'NOTA DA CERTIFICAÇÃO:', dados.notaCertificacao || '', '', '', '', '', '', '', '', '', '']);
+                planilha.push([]);
+                
+                // IDC
+                planilha.push(['IDC - ÍNDICE DE DESEMPENHO DO CONSULTOR', '', '', '', '', '', '', '', '', '', '', '', '']);
+                planilha.push(['MÊS', 'NOTA', 'APONTAMENTOS / OBSERVAÇÕES', '', '', '', '', '', '', '', '', '', '']);
+                
+                const meses = ['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO'];
+                const campos = ['janeiro','fevereiro','marco','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+                
+                for (let i = 0; i < meses.length; i++) {
+                    const dadosMes = dados.idc?.[campos[i]] || {};
+                    planilha.push([meses[i], dadosMes.nota || '', dadosMes.apontamento || '', '', '', '', '', '', '', '', '', '', '']);
                 }
-            }
-            
-            // Larguras das colunas
-            wsFrente['!cols'] = [
-                { wch: 25 }, { wch: 30 }, { wch: 25 }, { wch: 25 },
-                { wch: 20 }, { wch: 20 }, { wch: 15 }, { wch: 15 }
-            ];
-            
-            // ===== FOLHA 2: VERSO =====
-            const dadosVerso = [];
-            dadosVerso.push(['VISITAS RECEBIDAS - VERSO DO CHECKLIST', '', '', '', '', '', '', '']);
-            dadosVerso.push([]);
-            
-            if (dadosConsultorSelecionado.visitas && dadosConsultorSelecionado.visitas.length > 0) {
-                dadosVerso.push(['DATA', 'NOME DO VISITANTE', 'VISTO', 'FERRAMENTA', 'DOMÍNIO', 'UNIFORME', 'PDV', 'OBSERVAÇÃO']);
                 
-                dadosConsultorSelecionado.visitas.forEach(v => {
-                    dadosVerso.push([
-                        v.data || '',
-                        v.nome || '',
-                        v.visto || '',
-                        formatarFerramenta(v.ferramenta),
-                        formatarDominio(v.dominio),
-                        formatarUniforme(v.uniforme),
-                        formatarPDV(v.pdv),
-                        v.observacao || ''
+                planilha.push([]);
+                planilha.push(['ANOTAÇÕES GERAIS', '', '', '', '', '', '', '', '', '', '', '', '']);
+                planilha.push([dados.anotacoesGerais || '', '', '', '', '', '', '', '', '', '', '', '', '']);
+                planilha.push([]);
+                
+                // LOJA
+                if (dados.loja) {
+                    planilha.push(['INFORMAÇÕES DA LOJA', '', '', '', '', '', '', '', '', '', '', '', '']);
+                    planilha.push(['REVENDA:', dados.loja.revenda || '', 'FILIAL:', dados.loja.filial || '', 'ID:', dados.loja.id || '', '', '', '', '', '', '', '']);
+                    planilha.push(['ENDEREÇO:', dados.loja.endereco || '', '', '', '', '', '', '', '', '', '', '', '']);
+                    planilha.push(['GERENTE:', dados.loja.gerente || '', 'CONTATO:', dados.loja.contato || '', 'SUB GERENTE:', dados.loja.subGerente || '', '', '', '', '', '', '', '']);
+                    planilha.push(['CNPJ:', dados.loja.cnpj || '', '', '', '', '', '', '', '', '', '', '', '']);
+                    planilha.push([]);
+                    
+                    planilha.push(['FATURAMENTO DA LOJA', '', '', '', '', '', '', '', '', '', '', '', '']);
+                    planilha.push(['FATURAMENTO MENSAL LOJA R$:', dados.loja.faturamentoLoja || '', 'FATURAMENTO PANASONIC R$:', dados.loja.faturamentoPanasonic || '', '', '', '', '', '', '', '', '', '']);
+                    planilha.push(['RANKING NA REDE:', dados.loja.ranking || '', 'JUSTIFICATIVA:', dados.loja.justificativa || '', 'FLOOR SHARE %:', dados.loja.floorShare || '', '', '', '', '', '', '', '']);
+                    planilha.push([]);
+                }
+                
+                // DESTAQUES
+                if (dados.destaques) {
+                    planilha.push(['DESTAQUE DE VENDAS - LINHA BRANCA', '', '', '', '', '', '', '', '', '', '', '', '']);
+                    planilha.push(['GELADEIRA', '', '', 'MÁQUINA DE LAVAR', '', '', 'MICRO-ONDAS', '', '', '', '', '', '']);
+                    planilha.push([
+                        `Marca: ${dados.destaques.geladeira?.marca || ''}`,
+                        `Modelo: ${dados.destaques.geladeira?.modelo || ''}`,
+                        `Preço: R$ ${dados.destaques.geladeira?.preco || ''}`,
+                        `Marca: ${dados.destaques.lavadora?.marca || ''}`,
+                        `Modelo: ${dados.destaques.lavadora?.modelo || ''}`,
+                        `Preço: R$ ${dados.destaques.lavadora?.preco || ''}`,
+                        `Marca: ${dados.destaques.microondas?.marca || ''}`,
+                        `Modelo: ${dados.destaques.microondas?.modelo || ''}`,
+                        `Preço: R$ ${dados.destaques.microondas?.preco || ''}`,
+                        '', '', '', ''
                     ]);
-                });
-            } else {
-                dadosVerso.push(['Nenhuma visita registrada', '', '', '', '', '', '', '']);
-            }
-            
-            const wsVerso = XLSX.utils.aoa_to_sheet(dadosVerso);
-            
-            // Estilos do verso
-            for (let R = 0; R < dadosVerso.length; R++) {
-                for (let C = 0; C < 8; C++) {
-                    const cellRef = XLSX.utils.encode_cell({r: R, c: C});
-                    if (!wsVerso[cellRef]) continue;
-                    
-                    wsVerso[cellRef].s = {
-                        border: {
-                            top: {style: 'thin', color: {rgb: '000000'}},
-                            bottom: {style: 'thin', color: {rgb: '000000'}},
-                            left: {style: 'thin', color: {rgb: '000000'}},
-                            right: {style: 'thin', color: {rgb: '000000'}}
-                        },
-                        font: { name: 'Arial', sz: 11 }
-                    };
-                    
-                    if (R === 0) {
-                        wsVerso[cellRef].s.fill = { fgColor: { rgb: '1e3c72' } };
-                        wsVerso[cellRef].s.font = { color: { rgb: 'FFFFFF' }, bold: true, sz: 14 };
-                    }
-                    
-                    if (R === 2 && C === 0) {
-                        wsVerso[cellRef].s.fill = { fgColor: { rgb: '4472c4' } };
-                        wsVerso[cellRef].s.font = { color: { rgb: 'FFFFFF' }, bold: true };
+                    planilha.push([`OUTROS DESTAQUES: ${dados.destaques.outros || ''}`, '', '', '', '', '', '', '', '', '', '', '', '']);
+                    planilha.push([]);
+                }
+                
+                // PROGRAMAS
+                if (dados.programas) {
+                    planilha.push(['PANASONIC - PROGRAMA E CAMPANHAS', '', '', '', '', '', '', '', '', '', '', '', '']);
+                    planilha.push([
+                        `Conhecem Programa: ${dados.programas.conhecemPrograma || ''}`,
+                        `Cadastrados: ${dados.programas.cadastrados || ''}`,
+                        `Pendência: ${dados.programas.pendencia || ''}`,
+                        '', '', '', '', '', '', '', '', '', ''
+                    ]);
+                    planilha.push([`OBS: ${dados.programas.obsCadastro || ''}`, '', '', '', '', '', '', '', '', '', '', '', '']);
+                    planilha.push([]);
+                }
+                
+                // LANÇAMENTOS
+                if (dados.lancamentos?.length > 0) {
+                    planilha.push(['LANÇAMENTO - INTRODUÇÃO DE PRODUTO NA LOJA', '', '', '', '', '', '', '', '', '', '', '', '']);
+                    planilha.push(['DATA', 'MARCA', 'PRODUTO', 'MODELO', 'PREÇO', '', '', '', '', '', '', '', '']);
+                    dados.lancamentos.forEach(l => {
+                        planilha.push([l.data || '', l.marca || '', l.produto || '', l.modelo || '', `R$ ${l.preco || ''}`, '', '', '', '', '', '', '', '']);
+                    });
+                    planilha.push([]);
+                }
+                
+                // METAS
+                if (dados.metas) {
+                    planilha.push(['META DE TREINAMENTO ON THE JOB', '', '', '', '', '', '', '', '', '', '', '', '']);
+                    planilha.push([`Meta: ${dados.metas.metaTreinamento || ''}`, `Pessoas: ${dados.metas.metaPessoas || ''}`, '', '', '', '', '', '', '', '', '', '', '']);
+                    planilha.push([]);
+                }
+                
+                // MERCHANDISING
+                if (dados.merchandising) {
+                    planilha.push(['GUIA DE MERCHANDISING - MPV', '', '', '', '', '', '', '', '', '', '', '', '']);
+                    planilha.push([`MPV Aplicado: ${dados.merchandising.mpvAplicado || ''}`, `Motivo: ${dados.merchandising.motivoMpv || ''}`, '', '', '', '', '', '', '', '', '', '', '']);
+                    planilha.push([`Produtos Limpos: ${dados.merchandising.produtosLimpos || ''}`, `Motivo: ${dados.merchandising.motivoLimpeza || ''}`, '', '', '', '', '', '', '', '', '', '', '']);
+                    planilha.push([]);
+                }
+                
+                // VISITAS
+                if (dados.visitas?.length > 0) {
+                    planilha.push(['VERSO CHECK LIST - VISITAS RECEBIDAS', '', '', '', '', '', '', '', '', '', '', '', '']);
+                    planilha.push(['DATA', 'NOME', 'VISTO', 'FERRAMENTA', 'DOMÍNIO', 'UNIFORME', 'PDV', 'OBSERVAÇÃO', '', '', '', '', '']);
+                    dados.visitas.forEach(v => {
+                        planilha.push([
+                            v.data || '',
+                            v.nome || '',
+                            v.visto || '',
+                            v.ferramenta || '',
+                            v.dominio || '',
+                            v.uniforme || '',
+                            v.pdv || '',
+                            v.observacao || '',
+                            '', '', '', '', ''
+                        ]);
+                    });
+                }
+                
+                const ws = XLSX.utils.aoa_to_sheet(planilha);
+                
+                // APLICAR ESTILOS
+                const range = XLSX.utils.decode_range(ws['!ref']);
+                for (let R = range.s.r; R <= range.e.r; R++) {
+                    for (let C = range.s.c; C <= range.e.c; C++) {
+                        const cellRef = XLSX.utils.encode_cell({r: R, c: C});
+                        if (!ws[cellRef]) continue;
+                        
+                        ws[cellRef].s = {
+                            border: {
+                                top: {style: 'thin', color: {rgb: '000000'}},
+                                bottom: {style: 'thin', color: {rgb: '000000'}},
+                                left: {style: 'thin', color: {rgb: '000000'}},
+                                right: {style: 'thin', color: {rgb: '000000'}}
+                            },
+                            font: { name: 'Arial', sz: 10 },
+                            alignment: { vertical: 'center', wrapText: true }
+                        };
+                        
+                        // Título principal
+                        if (R === 0) {
+                            ws[cellRef].s.fill = { fgColor: { rgb: '1e3c72' } };
+                            ws[cellRef].s.font = { color: { rgb: 'FFFFFF' }, bold: true, sz: 14 };
+                            ws[cellRef].s.alignment = { horizontal: 'center' };
+                        }
+                        
+                        // Títulos das seções
+                        if (planilha[R] && planilha[R][0] && 
+                            (planilha[R][0].includes('INFORMAÇÕES') || 
+                             planilha[R][0].includes('CERTIFICAÇÃO') ||
+                             planilha[R][0].includes('IDC') ||
+                             planilha[R][0].includes('ANOTAÇÕES') ||
+                             planilha[R][0].includes('LOJA') ||
+                             planilha[R][0].includes('FATURAMENTO') ||
+                             planilha[R][0].includes('DESTAQUE') ||
+                             planilha[R][0].includes('PROGRAMA') ||
+                             planilha[R][0].includes('LANÇAMENTO') ||
+                             planilha[R][0].includes('META') ||
+                             planilha[R][0].includes('GUIA') ||
+                             planilha[R][0].includes('VERSO'))) {
+                            ws[cellRef].s.fill = { fgColor: { rgb: '4472c4' } };
+                            ws[cellRef].s.font = { color: { rgb: 'FFFFFF' }, bold: true, sz: 12 };
+                        }
                     }
                 }
-            }
-            
-            wsVerso['!cols'] = [
-                { wch: 12 }, { wch: 25 }, { wch: 15 }, { wch: 25 },
-                { wch: 25 }, { wch: 20 }, { wch: 20 }, { wch: 40 }
-            ];
-            
-            // Adicionar planilhas
-            XLSX.utils.book_append_sheet(wb, wsFrente, "FRENTE CHECKLIST");
-            XLSX.utils.book_append_sheet(wb, wsVerso, "VERSO VISITAS");
-            
-            // Salvar
-            const nomeArquivo = `Checklist_${(dadosConsultorSelecionado.consultor || 'consultor').replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`;
-            XLSX.writeFile(wb, nomeArquivo);
-            
-            mostrarStatus('✅ Excel exportado com formatação profissional!', 'sucesso');
-            
-        } catch (error) {
-            console.error('Erro:', error);
-            alert('Erro ao exportar: ' + error.message);
-        }
+                
+                ws['!cols'] = [
+                    { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 20 },
+                    { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 20 },
+                    { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }
+                ];
+                
+                XLSX.utils.book_append_sheet(wb, ws, "CHECKLIST COMPLETO");
+                
+                const nomeArquivo = `Checklist_${(dados.consultor || 'consultor').replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`;
+                XLSX.writeFile(wb, nomeArquivo);
+            });
     }
 
-    // EXPORTAR RELATÓRIO GERAL
     function exportarRelatorioGeral() {
         const wb = XLSX.utils.book_new();
+        const dados = [['RELATÓRIO GERAL - CONSULTORES', '', '', '', '', '', '', '', '', '', '', '', '']];
+        dados.push(['Nome', 'Regional', 'Cidade', 'UF', 'Supervisor', 'Data Admissão', 'Média IDC', 'Total Visitas', '', '', '', '', '']);
         
-        const dados = [
-            ['RELATÓRIO GERAL - CHECKLISTS 2026', '', '', '', '', '', '', ''],
-            ['Data de geração:', new Date().toLocaleDateString('pt-BR'), 'Total Consultores:', todosConsultores.length, '', '', '', ''],
-            [],
-            ['Consultor', 'Regional', 'Cidade', 'UF', 'Supervisor', 'Data Admissão', 'Média IDC', 'Total Visitas']
-        ];
-        
-        todosConsultores.forEach((c) => {
+        todosConsultores.forEach(c => {
             dados.push([
-                c.consultor || c.nome,
+                c.consultor || '',
                 c.regional || '',
                 c.cidade || '',
                 c.uf || '',
                 c.supervisor || '',
                 c.dataAdmissao || '',
                 calcularMediaIDC(c),
-                c.visitas ? c.visitas.length : 0
+                c.visitas?.length || 0,
+                '', '', '', '', ''
             ]);
         });
         
         const ws = XLSX.utils.aoa_to_sheet(dados);
-        
-        // Estilos
-        for (let R = 0; R < dados.length; R++) {
-            for (let C = 0; C < 8; C++) {
-                const cellRef = XLSX.utils.encode_cell({r: R, c: C});
-                if (!ws[cellRef]) continue;
-                
-                ws[cellRef].s = {
-                    border: {
-                        top: {style: 'thin', color: {rgb: '000000'}},
-                        bottom: {style: 'thin', color: {rgb: '000000'}},
-                        left: {style: 'thin', color: {rgb: '000000'}},
-                        right: {style: 'thin', color: {rgb: '000000'}}
-                    },
-                    font: { name: 'Arial', sz: 11 }
-                };
-                
-                if (R === 0) {
-                    ws[cellRef].s.fill = { fgColor: { rgb: '1e3c72' } };
-                    ws[cellRef].s.font = { color: { rgb: 'FFFFFF' }, bold: true, sz: 14 };
-                }
-                
-                if (R === 3) {
-                    ws[cellRef].s.fill = { fgColor: { rgb: '4472c4' } };
-                    ws[cellRef].s.font = { color: { rgb: 'FFFFFF' }, bold: true };
-                }
-            }
-        }
-        
         ws['!cols'] = [{ wch: 25 }, { wch: 15 }, { wch: 15 }, { wch: 5 }, { wch: 20 }, { wch: 12 }, { wch: 10 }, { wch: 10 }];
-        
         XLSX.utils.book_append_sheet(wb, ws, "Relatório Geral");
         XLSX.writeFile(wb, `Relatorio_Geral_${new Date().toISOString().split('T')[0]}.xlsx`);
     }
 
-    // FUNÇÕES AUXILIARES
     function fecharModal() {
         document.getElementById('modalChecklist').classList.remove('active');
-    }
-
-    function mudarAba(aba) {
-        document.querySelectorAll('.aba-conteudo').forEach(el => el.classList.add('hidden'));
-        document.getElementById(`abaCompletoLink`).className = 'inline-block py-3 px-6 border-b-2 border-transparent text-gray-600';
-        document.getElementById(`abaCalendarioLink`).className = 'inline-block py-3 px-6 border-b-2 border-transparent text-gray-600';
-        document.getElementById(`abaVersoLink`).className = 'inline-block py-3 px-6 border-b-2 border-transparent text-gray-600';
-        
-        document.getElementById(`aba${aba.charAt(0).toUpperCase() + aba.slice(1)}`).classList.remove('hidden');
-        document.getElementById(`aba${aba.charAt(0).toUpperCase() + aba.slice(1)}Link`).className = 'inline-block py-3 px-6 border-b-2 border-[#1e3c72] text-[#1e3c72] font-medium';
-    }
-
-    function mesAnterior() {
-        mesCalendario.setMonth(mesCalendario.getMonth() - 1);
-        if (dadosConsultorSelecionado) gerarCalendario(dadosConsultorSelecionado);
-    }
-
-    function proximoMes() {
-        mesCalendario.setMonth(mesCalendario.getMonth() + 1);
-        if (dadosConsultorSelecionado) gerarCalendario(dadosConsultorSelecionado);
     }
 </script>
 
