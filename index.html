@@ -1105,10 +1105,10 @@
                     </p>
                 </div>
                 <div class="flex gap-3">
-                        <button onclick="limparDadosLoja()"
-                            class="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all border border-blue-500/20">
-                            <i class="fas fa-plus mr-1"></i> Novo Checklist
-                        </button>
+                    <button onclick="exportarTodosChecklists('${consultorId}')" 
+                            class="bg-green-600 text-white px-6 py-3 rounded-2xl text-sm font-bold hover:bg-green-700 transition-all shadow-lg shadow-green-200">
+                        <i class="fas fa-file-excel mr-2"></i> Exportar TODAS Visitas
+                    </button>
                 </div>
             </div>
     `;
@@ -1925,6 +1925,81 @@
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             }
+        }
+
+        // FUNÇÃO PARA EXPORTAR TODOS OS CHECKLISTS DE UM CONSULTOR
+        function exportarTodosChecklists(consultorId) {
+            database.ref(`consultores/${consultorId}/checklists`).once('value')
+                .then(snapshot => {
+                    const checklists = snapshot.val();
+                    if (!checklists) {
+                        alert('Nenhum checklist encontrado para exportar.');
+                        return;
+                    }
+
+                    const wb = XLSX.utils.book_new();
+                    const dadosRelatorio = [];
+
+                    // Cabeçalho
+                    dadosRelatorio.push(['RELATÓRIO COMPLETO - TODAS AS VISITAS']);
+                    dadosRelatorio.push(['Consultor:', document.getElementById('modalTitulo').innerText.replace(/[^A-Za-zÀ-ÖØ-öø-ÿ\s]/g, '').trim()]);
+                    dadosRelatorio.push(['Data Exportação:', new Date().toLocaleString('pt-BR')]);
+                    dadosRelatorio.push(['Total de Visitas:', Object.keys(checklists).length]);
+                    dadosRelatorio.push([]);
+
+                    // Cabeçalho das colunas - MAIS COMPLETO
+                    dadosRelatorio.push([
+                        'Data', 'Hora', 'Loja', 'Filial', 'Cidade/UF',
+                        'Gerente', 'Faturamento Loja', 'Faturamento Panasonic',
+                        'Ranking', 'Floor Share %', 'MPV Aplicado',
+                        'Produtos Limpos', 'Observações'
+                    ]);
+
+                    // Ordenar por data (mais recente primeiro)
+                    const sortedKeys = Object.keys(checklists).sort((a, b) => {
+                        const dataA = checklists[a].dataSalvamento || '';
+                        const dataB = checklists[b].dataSalvamento || '';
+                        return dataB.localeCompare(dataA);
+                    });
+
+                    sortedKeys.forEach(key => {
+                        const c = checklists[key];
+                        const loja = c.loja || {};
+
+                        const dataObj = c.dataSalvamento ? new Date(c.dataSalvamento) : null;
+                        const dataFormatada = dataObj ? dataObj.toLocaleDateString('pt-BR') : '';
+                        const horaFormatada = dataObj ? dataObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
+
+                        dadosRelatorio.push([
+                            dataFormatada,
+                            horaFormatada,
+                            loja.revenda || '',
+                            loja.filial || '',
+                            loja.cidadeUf || (c.cidade ? `${c.cidade}/${c.uf}` : ''),
+                            loja.gerente || '',
+                            loja.faturamentoLoja || '',
+                            loja.faturamentoPanasonic || '',
+                            loja.ranking || '',
+                            loja.floorShare || '',
+                            c.merchandising?.mpvAplicado || '',
+                            c.merchandising?.produtosLimpos || '',
+                            c.anotacoesGerais || ''
+                        ]);
+                    });
+
+                    const ws = XLSX.utils.aoa_to_sheet(dadosRelatorio);
+                    ws['!cols'] = [
+                        { wch: 12 }, { wch: 8 }, { wch: 30 }, { wch: 10 }, { wch: 15 },
+                        { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 10 }, { wch: 8 },
+                        { wch: 12 }, { wch: 12 }, { wch: 40 }
+                    ];
+
+                    const nomeConsultor = document.getElementById('modalTitulo').innerText.replace(/[^A-Za-zÀ-ÖØ-öø-ÿ\s]/g, '').trim();
+                    XLSX.utils.book_append_sheet(wb, ws, "Todas Visitas");
+                    XLSX.writeFile(wb, `Todas_Visitas_${nomeConsultor}_${new Date().toISOString().split('T')[0]}.xlsx`);
+
+                    alert(`✅ Relatório exportado com ${Object.keys(checklists).length} visitas!`);
+                });
         }
     </script>
 
